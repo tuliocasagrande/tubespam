@@ -5,8 +5,5 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
   url(r'^admin/', include(admin.site.urls)),
-  url(r'^$', 'app.views.index', name='index'),
-
-  # ex: /watch?v=12345678901
-  url(r'^watch$', 'app.views.watch', name='watch'),
+  url(r'^', include('app.urls')),
 )

@@ -1,0 +1,18 @@
+.content {
+  margin-bottom: 0;
+}
+
+#summary > div {
+  margin-bottom: 10px;
+}
+
+@media only screen and (min-width: 64.063em) { /* min-width 1025px, large screens */
+  #summary {
+    width: 300px; /* almost equivalent to 4 columns */
+    position: fixed;
+  }
+}
+
+.comment_tag {
+ margin-bottom: 0px;
+}

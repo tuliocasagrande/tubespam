@@ -13,4 +13,10 @@ class Comment(models.Model):
   tag = models.BooleanField()
 
   def __unicode__(self):
-        return self.id
+    return self.id
+
+  def getTag(self):
+    return str(int(self.tag))
+
+  def getEscapedContent(self):
+    return self.content.replace('"', '\\"').replace('\n', ' ')
