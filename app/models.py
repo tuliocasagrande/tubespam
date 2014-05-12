@@ -10,7 +10,7 @@ class Comment(models.Model):
   id = models.CharField(primary_key=True, max_length=64)
   video_id = models.ForeignKey(Video)
   content = models.TextField()
-  tag = models.BooleanField(default=0)
+  tag = models.BooleanField()
 
   def __unicode__(self):
         return self.id
