@@ -24,3 +24,37 @@ def getTaggedComments(request):
 
   output += '}'
   return HttpResponse(output)
+
+def saveComment(request):
+  try:
+    comment_id = request.POST['comment_id']
+    video_id = request.POST['video_id']
+    content = request.POST['content']
+    tag = request.POST['tag']
+  except:
+    return HttpResponse('error!', status=400)
+
+  if not comment_id or not video_id or not content or not tag:
+    return HttpResponse('error!', status=400)
+
+  try:
+    comment = Comment.objects.get(id=comment_id)
+  except Comment.DoesNotExist:
+    comment = Comment(id=comment_id, video_id=retrieveVideo(video_id), content=content)
+
+  if tag == 'spam':
+    comment.tag = True
+  else:
+    comment.tag = False
+
+  comment.save()
+  return HttpResponse('success!')
+
+def retrieveVideo(video_id):
+  try:
+    video = Video.objects.get(id=video_id)
+  except Video.DoesNotExist:
+    video = Video(id=video_id)
+    video.save()
+
+  return video

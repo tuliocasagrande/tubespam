@@ -10,4 +10,6 @@ urlpatterns = patterns('',
 
   # ex: /getTaggedComments?v=12345678901
   url(r'^getTaggedComments$', views.getTaggedComments, name='getTaggedComments'),
+
+  url(r'^saveComment$', views.saveComment, name='saveComment'),
 )

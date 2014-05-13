@@ -19,4 +19,9 @@ class Comment(models.Model):
     return str(int(self.tag))
 
   def getEscapedContent(self):
-    return self.content.replace('"', '\\"').replace('\n', ' ')
+    content = self.content
+    content = content.replace('\\', '\\\\')
+    content = content.replace('"', '\\"')
+    content = content.replace('\n', ' ')
+    content = content.replace('\r', ' ')
+    return content.encode('utf-8')

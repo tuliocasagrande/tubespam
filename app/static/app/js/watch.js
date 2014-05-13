@@ -1,26 +1,26 @@
 function getVideoMeta(video_id) {
-	var url = 'https://gdata.youtube.com/feeds/api/videos/'+ video_id +'?alt=json';
-	$.ajax({
-		type: 'GET',
-		url: url,
-		dataType: 'json'
-	}).done(function(data){
-		document.title = data.entry.title.$t;
-		$('#video_title').html(data.entry.title.$t);
-		$('#published').html(formattedDate(new Date(data.entry.published.$t)));
-		$('#content').html(data.entry.content.$t);
+  var url = 'https://gdata.youtube.com/feeds/api/videos/'+ video_id +'?alt=json';
+  $.ajax({
+    type: 'GET',
+    url: url,
+    dataType: 'json'
+  }).done(function(data){
+    document.title = data.entry.title.$t;
+    $('#video_title').html(data.entry.title.$t);
+    $('#published').html(formattedDate(new Date(data.entry.published.$t)));
+    $('#content').html(data.entry.content.$t);
 
-		$('#viewCount').html(formattedNumber(data.entry.yt$statistics.viewCount));
+    $('#viewCount').html(formattedNumber(data.entry.yt$statistics.viewCount));
 
-		try {
-			COMMENT_COUNT = data.entry.gd$comments.gd$feedLink.countHint;
+    try {
+      COMMENT_COUNT = data.entry.gd$comments.gd$feedLink.countHint;
       $('#commentCount').html(formattedNumber(COMMENT_COUNT));
-			getTaggedComments(video_id);
-		} catch(e) {
-			$('#comments').append("Comments are disabled for this video.");
+      getTaggedComments(video_id);
+    } catch(e) {
+      $('#comments').append("Comments are disabled for this video.");
       $moreComments.remove();
-		}
-	});
+    }
+  });
 }
 
 var $moreComments = $('#moreComments');
@@ -64,10 +64,10 @@ function formattedNumber(number, decimals, dec_point, thousands_sep) {
 }
 
 function formattedDate(date) {
-	var MONTH_NAMES = ["Jan ", "Feb ", "Mar ", "Apr ", "May ", "Jun ",
-    								 "Jul ", "Aug ", "Sep ", "Oct ", "Nov ", "Dec "];
+  var MONTH_NAMES = ["Jan ", "Feb ", "Mar ", "Apr ", "May ", "Jun ",
+                     "Jul ", "Aug ", "Sep ", "Oct ", "Nov ", "Dec "];
 
-	return 'Uploaded on ' + MONTH_NAMES[date.getMonth()] + date.getDate() + ', ' + date.getFullYear();
+  return 'Uploaded on ' + MONTH_NAMES[date.getMonth()] + date.getDate() + ', ' + date.getFullYear();
 }
 
 var TAGGED_COMMENTS;
@@ -109,15 +109,15 @@ function formattedComment(id, content, tag, tagType) {
 
 function getTaggedComments(video_id) {
 
-	$.ajax({
-		type: 'GET',
-		url: '/getTaggedComments',
-		data: { v: video_id },
-		dataType: 'json'
-	}).done(function(data) {
-		TAGGED_COMMENTS = data;
+  $.ajax({
+    type: 'GET',
+    url: '/getTaggedComments',
+    data: { v: video_id },
+    dataType: 'json'
+  }).done(function(data) {
+    TAGGED_COMMENTS = data;
 
-		for (var key in TAGGED_COMMENTS) {
+    for (var key in TAGGED_COMMENTS) {
       if (TAGGED_COMMENTS[key].tag === "1") {
         NUMBER_OF_TAGGED_SPAM++;
         $('#comments').prepend(formattedComment(key,
@@ -128,15 +128,16 @@ function getTaggedComments(video_id) {
           TAGGED_COMMENTS[key].content, HAM_TAG, 'manual'));
       }
       NUMBER_OF_TAGGED++;
-		}
+    }
     updateTagsCount();
 
     var url = 'https://gdata.youtube.com/feeds/api/videos/'+ video_id +'/comments?' +
             'alt=json&max-results=50&orderby=published';
     getNewComments(url);
-	}).fail(function(data) {
-		console.log('ERROR JSON!!!');
-	})
+  }).fail(function(data) {
+    console.log('ERROR JSON!!!');
+    console.log(data.responseText);
+  })
 }
 
 
@@ -229,57 +230,59 @@ function suspiciousComment(content) {
 
 
 $(document).ready(function(){
-	var video_id = $('#video_title').attr('video_id');
-	getVideoMeta(video_id);
+  var csrftoken = $.cookie('csrftoken');
+  var video_id = $('#video_title').attr('video_id');
+  getVideoMeta(video_id);
 
-	$('#comments').on('click', '.comment_tag', function() {
-		var $this = $(this);
+  $('#comments').on('click', '.comment_tag', function() {
+    var $this = $(this);
 
-		if ($this.attr('disabled')) {
-			return false;
-		}
+    if ($this.attr('disabled')) {
+      return false;
+    }
 
     var $root = $this.parent().parent();
-		var comment_id = $root.attr('comment_id');
-		var tag = $this.attr('tag');
-		var content = $root.find('.content').html();
+    var comment_id = $root.attr('comment_id');
+    var tag = $this.attr('tag');
+    var content = $root.find('.content').html();
 
-		$.ajax({
-			type: 'POST',
-			url: '/saveSampleTag',
-			data: { video_id: video_id,
-					comment_id: comment_id,
-					content: content,
-					tag: tag },
-			dataType: 'text'
-		}).done(function(success) {
-			if (tag == 'spam') {
+    $.ajax({
+      type: 'POST',
+      url: '/saveComment',
+      headers: {'X-CSRFToken': csrftoken},
+      data: {comment_id: comment_id,
+          video_id: video_id,
+          content: content,
+          tag: tag },
+      dataType: 'text'
+    }).done(function(success) {
+      if (tag == 'spam') {
         NUMBER_OF_TAGGED_SPAM++;
         if ($root.attr('tagType') == 'manual') {
           NUMBER_OF_TAGGED_HAM--;
         } else {
           NUMBER_OF_TAGGED++;
         }
-				$this.siblings().removeClass('success');
-				$this.addClass('alert');
+        $this.siblings().removeClass('success');
+        $this.addClass('alert');
 
-			} else {
+      } else {
         NUMBER_OF_TAGGED_HAM++;
         if ($root.attr('tagType') == 'manual') {
           NUMBER_OF_TAGGED_SPAM--;
         } else {
           NUMBER_OF_TAGGED++;
         }
-				$this.siblings().removeClass('alert');
-				$this.addClass('success');
-			}
+        $this.siblings().removeClass('alert');
+        $this.addClass('success');
+      }
 
-			$this.siblings().removeAttr('disabled');
-			$this.attr('disabled', true);
+      $this.siblings().removeAttr('disabled');
+      $this.attr('disabled', true);
       updateTagsCount();
-			console.log(success);
-		});
-	});
+      console.log(success);
+    });
+  });
 
   $('#moreComments').click(function() {
     if (!$(this).attr('disabled')) {
