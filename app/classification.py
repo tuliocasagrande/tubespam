@@ -18,7 +18,6 @@ def classify(comments):
     classes.append(1 if c.tag else 0)
 
   classes = numpy.asarray(classes)
-  print classes
   vectorizer = CountVectorizer(min_df=1)
   bagOfWords = vectorizer.fit_transform(contents)
 
