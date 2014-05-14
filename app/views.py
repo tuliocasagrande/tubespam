@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 
 from app.models import Video, Comment
+import app.classification as classification
 
 def index(request):
   return render(request, 'app/index.html', {'videos': Video.objects.all()})
@@ -58,3 +59,16 @@ def retrieveVideo(video_id):
     video.save()
 
   return video
+
+def classify(request):
+  output = ''
+
+  video_id = request.GET.get('v')
+  if video_id:
+    comments = Comment.objects.filter(video_id=video_id)
+    if len(comments) < 20:
+      output = 'At least 20 tagged comments are needed!'
+    else:
+      output = classification.classify(comments)
+
+  return HttpResponse('<pre>'+output+'</pre>')
