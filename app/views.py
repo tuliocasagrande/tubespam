@@ -7,6 +7,9 @@ import app.classification as classification
 def index(request):
   return render(request, 'app/index.html', {'videos': Video.objects.all()})
 
+def about(request):
+  return render(request, 'app/about.html')
+
 def watch(request):
   video_id = request.GET.get('v')
   if not video_id:

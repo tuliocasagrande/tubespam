@@ -1,18 +1,15 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Tube Spam</title>
-  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-</head>
-<body>
-{% if videos %}
-  <ul>
-  {% for v in videos %}
-    <li><a href="/watch?v={{ v.id }}">{{ v.id }}</a></li>
-  {% endfor %}
-  </ul>
-{% else %}
-  <p>No videos are available.</p>
-{% endif %}
-</body>
-</html>
+{% extends "app/base.html" %}
+
+{% block content %}
+  <div class="large-8 columns" role="content">
+  {% if videos %}
+    <ul>
+    {% for v in videos %}
+      <li><a href="/watch?v={{ v.id }}">{{ v.id }}</a></li>
+    {% endfor %}
+    </ul>
+  {% else %}
+    <h3>No videos are available.</h3>
+  {% endif %}
+  </div>
+{% endblock %}

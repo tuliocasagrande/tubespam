@@ -1,121 +1,75 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Loading - Tube Spam</title>
-  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-  {% load staticfiles %}
-  <link type="text/css" rel="stylesheet" href="{% static 'app/css/normalize.css' %}" />
-  <link type="text/css" rel="stylesheet" href="{% static 'app/css/foundation.min.css' %}" />
-  <link type="text/css" rel="stylesheet" href="{% static 'app/css/foundation-icons/foundation-icons.css' %}" />
-  <link type="text/css" rel="stylesheet" href="{% static 'app/css/base.css' %}" />
-</head>
-<body>
-  <!-- Nav Bar -->
-  <div class="row">
-    <div class="large-12 columns">
-      <div class="nav-bar right">
-       <ul class="button-group">
-         <li><a href="/" class="button secondary">Home</a></li>
-         <li><a href="/about" class="button secondary">About</a></li>
-        </ul>
-      </div>
-      <h1>Tubespam <small>UFSCar Sorocaba</small></h1>
-      <hr />
-    </div>
+{% extends "app/base.html" %}
+
+{% block title %}Tubespam - Loading{% endblock %}
+
+{% block content %}
+  <!-- Main Content -->
+  <div class="large-8 columns" role="content">
+    <article>
+      <iframe width="640" height="360" src="//www.youtube.com/embed/{{ video_id }}" frameborder="0" allowfullscreen></iframe>
+      <h3 id="video_title" video_id="{{ video_id }}">Loading...</h3>
+
+      <small id="video_publish_date"></small>
+      <p id="video_content"></p>
+    </article>
+
+    <hr />
+
+    <div id="comments"></div>
+    <a href id="moreComments" class="button expand secondary tiny" disabled>Loading ...</a>
   </div>
-  <!-- End Nav -->
+  <!-- End Main Content -->
 
-  <!-- Main Page Content and Sidebar -->
-  <div class="row">
+  <!-- Sidebar -->
+  <aside class="large-4 columns">
 
-    <!-- Main Content -->
-    <div class="large-8 columns" role="content">
-      <article>
-        <iframe width="640" height="360" src="//www.youtube.com/embed/{{ video_id }}" frameborder="0" allowfullscreen></iframe>
-        <h3 id="video_title" video_id="{{ video_id }}">Loading...</h3>
+    <!-- <h5>Categories</h5> -->
+    <!-- <ul class="side-nav">
+      <li><a href="#">News</a></li>
+      <li><a href="#">Code</a></li>
+      <li><a href="#">Design</a></li>
+      <li><a href="#">Fun</a></li>
+      <li><a href="#">Weasels</a></li>
+    </ul> -->
 
-        <small id="published"></small>
-        <p id="content"></p>
-      </article>
-
-      <hr />
-
-      <div id="comments"></div>
-      <a href id="moreComments" class="button expand secondary tiny" disabled>Loading ...</a>
-    </div>
-    <!-- End Main Content -->
-
-
-    <!-- Sidebar -->
-    <aside class="large-4 columns">
-
-      <!-- <h5>Categories</h5> -->
-      <!-- <ul class="side-nav">
-        <li><a href="#">News</a></li>
-        <li><a href="#">Code</a></li>
-        <li><a href="#">Design</a></li>
-        <li><a href="#">Fun</a></li>
-        <li><a href="#">Weasels</a></li>
-      </ul> -->
-
-      <div id="summary" class="panel">
-        <h4>Summary</h4>
-        <div>
-          <strong># views:</strong> <span id="viewCount">0</span>
-        </div>
-
-        <div>
-          <strong># comments:</strong> <span id="commentCount">0</span>
-          <small>The actual count of comments may differ because, since November 2013, shares on Google+ are counted as comments.</small>
-        </div>
-
-        <div>
-          <strong># tagged comments:</strong>
-          <span id="taggedCount">0</span>
-        </div>
-
-        <div>
-          <strong># tagged spam:</strong>
-          <span id="spamCount">0</span>
-        </div>
-
-        <div>
-          <strong># tagged ham:</strong>
-          <span id="hamCount">0</span>
-        </div>
-
-        <a href="#" class="button expand tiny" disabled>Classify</a>
-
+    <div id="summary" class="panel">
+      <h4>Summary</h4>
+      <div>
+        <strong># views:</strong> <span id="viewCount">0</span>
       </div>
-    </aside>
-    <!-- End Sidebar -->
 
-  </div>
-  <!-- End Main Content and Sidebar -->
-
-
-  <!-- Footer -->
-  <footer class="row">
-    <div class="large-12 columns">
-      <hr />
-      <div class="row">
-        <div class="large-6 columns">
-          <p>Universidade Federal de São Carlos - UFSCar <small>Campus Sorocaba</small></p>
-        </div>
-        <div class="large-6 columns">
-          <ul class="inline-list right">
-            <li><a href="/">Home</a></li>
-            <li><a href="/about">About</a></li>
-          </ul>
-        </div>
+      <div>
+        <strong># comments:</strong> <span id="commentCount">0</span>
+        <small>The actual count of comments may differ because, since November 2013, shares on Google+ are counted as comments.</small>
       </div>
-    </div>
-  </footer>
 
+      <div>
+        <strong># tagged comments:</strong>
+        <span id="taggedCount">0</span>
+      </div>
+
+      <div>
+        <strong># tagged spam:</strong>
+        <span id="spamCount">0</span>
+      </div>
+
+      <div>
+        <strong># tagged ham:</strong>
+        <span id="hamCount">0</span>
+      </div>
+
+      <a href="classify?v={{ video_id }}" class="button expand tiny" disabled>Classify</a>
+
+    </div>
+  </aside>
+  <!-- End Sidebar -->
+{% endblock %}
+
+{% block js %}
   <!-- JS (Placed at the end of the document so the pages load faster) -->
+  {% load staticfiles %}
   <script src="{% static 'app/js/vendor/jquery.js' %}"></script>
   <script src="{% static 'app/js/vendor/jquery.cookie.js' %}"></script>
   <script src="{% static 'app/js/foundation.min.js' %}"></script>
   <script src="{% static 'app/js/watch.js' %}" type="text/javascript"></script>
-</body>
-</html>
+{% endblock %}

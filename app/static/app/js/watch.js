@@ -7,8 +7,8 @@ function getVideoMeta(video_id) {
   }).done(function(data){
     document.title = data.entry.title.$t;
     $('#video_title').html(data.entry.title.$t);
-    $('#published').html(formattedDate(new Date(data.entry.published.$t)));
-    $('#content').html(data.entry.content.$t);
+    $('#video_publish_date').html(formattedDate(new Date(data.entry.published.$t)));
+    $('#video_content').html(data.entry.content.$t);
 
     $('#viewCount').html(formattedNumber(data.entry.yt$statistics.viewCount));
 
