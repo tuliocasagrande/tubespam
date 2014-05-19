@@ -16,3 +16,9 @@
 .comment_tag {
  margin-bottom: 0px;
 }
+
+.loading-icon {
+  background: white url("../img/loading.gif") no-repeat right bottom;
+  width: 32px;
+  height: 32px;
+}

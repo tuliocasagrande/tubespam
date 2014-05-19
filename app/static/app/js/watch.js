@@ -26,11 +26,13 @@ function getVideoMeta(video_id) {
 var $moreComments = $('#moreComments');
 function lockMoreCommentsButton() {
   $moreComments.html('Loading ...');
+  $moreComments.addClass('loading-icon');
   $moreComments.attr('disabled', true);
 }
 
 function unlockMoreCommentsButton() {
   $moreComments.html('Show more comments <i class="fi-refresh"></i>');
+  $moreComments.removeClass('loading-icon');
   $moreComments.removeAttr('disabled');
 }
 

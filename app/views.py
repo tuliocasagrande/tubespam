@@ -74,4 +74,4 @@ def classify(request):
     else:
       output = classification.classify(comments)
 
-  return HttpResponse('<pre>'+output+'</pre>')
+  return render(request, 'app/classify.html', {'content': output})

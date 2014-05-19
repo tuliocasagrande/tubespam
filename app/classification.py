@@ -1,11 +1,13 @@
 import csv
 import numpy
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn import naive_bayes, svm, linear_model
-from sklearn import metrics
-from sklearn import cross_validation
 from sklearn.grid_search import GridSearchCV
-from sklearn.metrics import classification_report
+from sklearn import cross_validation
+from sklearn import naive_bayes, svm, linear_model
+from sklearn.semi_supervised import LabelSpreading
+from sklearn.semi_supervised import LabelPropagation
+#from sklearn import metrics
+#from sklearn.metrics import classification_report
 
 
 def classify(comments):
@@ -23,20 +25,24 @@ def classify(comments):
 
   # CLASSIFIERS ======================================
 
-  output += "Multinomial NB: " + naiveBayes(bagOfWords, classes)
+  output += "Multinomial NB:\n" + naiveBayes(bagOfWords, classes)
   output += "\n\nLogistic Regression: " + logistic(bagOfWords, classes)
   output += "\n\nSVMLinear: " + svmLinear(bagOfWords, classes)
-  output += "\n\nSVM - Kernel Linear: " + svmKernelLinear(bagOfWords, classes)
-  output += "\n\nSVM - Kernel Radial: " + svmKernelRadial(bagOfWords, classes)
-  output += "\n\nSVM - Kernel Polinomial: " + svmKernelPolinomial(bagOfWords, classes)
+  output += "\n\nSVM: " + svmGS(bagOfWords, classes)
 
   return output
 
 def acc(scores):
-  return "--> Acc: %0.2f%% (+/- %0.3f)" % (scores.mean() * 100, scores.std() * 2)
+  print scores
+  return "Accuracy: %0.2f%% (+/- %0.3f)" % (scores.mean() * 100, scores.std() * 2)
 
 def naiveBayes(bow, classes):
-  return acc(cross_validation.cross_val_score(naive_bayes.MultinomialNB(alpha=.01), bow, classes, cv=10))
+  return acc(
+    cross_validation.cross_val_score(
+      naive_bayes.MultinomialNB(alpha=.01),
+      bow,
+      classes,
+      cv=10))
 
 def logistic(bow, classes):
   c = list((10.0**i) for i in range(-3,3))
@@ -44,8 +50,14 @@ def logistic(bow, classes):
   clf = GridSearchCV(linear_model.LogisticRegression(), tuned_parameters, cv=10)
   clf.fit(bow, classes)
 
-  output = "\n--> Melhores parametros: --> C: %f\n" % (clf.best_estimator_.C)
-  return output + acc(cross_validation.cross_val_score(linear_model.LogisticRegression(C=clf.best_estimator_.C), bow, classes, cv=10))
+  output = '\n--> Melhores parametros:\n'
+  output += '\tC: %f\n' % (clf.best_estimator_.C)
+  return output + acc(
+    cross_validation.cross_val_score(
+      linear_model.LogisticRegression(C=clf.best_estimator_.C),
+      bow,
+      classes,
+      cv=10))
 
 def svmLinear(bow, classes):
   c = list((10.0**i) for i in range(-3,3))
@@ -53,35 +65,42 @@ def svmLinear(bow, classes):
   clf = GridSearchCV(svm.LinearSVC(), tuned_parameters, cv=10)
   clf.fit(bow, classes)
 
-  output = "\n--> Melhores parametros: --> C: %f\n" % (clf.best_estimator_.C)
-  return output + acc(cross_validation.cross_val_score(svm.LinearSVC(C=clf.best_estimator_.C), bow, classes, cv=10))
+  output = '\n--> Melhores parametros:\n'
+  output += '\tC: %f\n' % (clf.best_estimator_.C)
 
-def svmKernelLinear(bow, classes):
-  c = list((10.0**i) for i in range(-3,3))
-  tuned_parameters = [{'kernel': ['linear'], 'C': c}]
-  clf = GridSearchCV(svm.SVC(), tuned_parameters, cv=10)
-  clf.fit(bow, classes)
+  return output + acc(
+    cross_validation.cross_val_score(
+      svm.LinearSVC(C=clf.best_estimator_.C),
+      bow,
+      classes,
+      cv=10))
 
-  output = "\n--> Melhores parametros: --> C: %f\n" % (clf.best_estimator_.C)
-  return output + acc(cross_validation.cross_val_score(svm.SVC(kernel=clf.best_estimator_.kernel,C=clf.best_estimator_.C), bow, classes, cv=10))
+def svmGS(bow, classes):
+  param_c = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+  param_gamma = [0.0001, 0.001, 0.01, 0.1]
+  param_grid = [
+    {'C': param_c, 'kernel': ['linear']},
+    {'C': param_c, 'gamma': param_gamma, 'kernel': ['rbf']},
+    {'C': param_c, 'gamma': param_gamma, 'kernel': ['poly']},
+  ]
 
-def svmKernelRadial(bow, classes):
-  param = list((10.0**i) for i in range(-3,3))
-  tuned_parameters = [{'kernel': ['rbf'], 'C': param, 'gamma': param}]
-  clf = GridSearchCV(svm.SVC(), tuned_parameters, cv=10)
-  clf.fit(bow, classes)
+  grid = GridSearchCV(svm.SVC(), param_grid, cv=10)
+  grid.fit(bow, classes)
 
-  output = "\n--> Melhores parametros: --> C: %f \t Gamma: %f\n" % (clf.best_estimator_.C, clf.best_estimator_.gamma)
-  return output + acc(cross_validation.cross_val_score(svm.SVC(kernel=clf.best_estimator_.kernel,C=clf.best_estimator_.C, gamma=clf.best_estimator_.gamma), bow, classes, cv=10))
+  output = '\n--> Melhores parametros:\n'
+  output += '\tKernel: %s\n' % (grid.best_estimator_.kernel)
+  output += '\tC: %f\n' % (grid.best_estimator_.C)
 
-def svmKernelPolinomial(bow, classes):
-  param = list((10.0**i) for i in range(-3,3))
-  tuned_parameters = [{'kernel': ['poly'], 'C': param, 'gamma': param}]
-  clf = GridSearchCV(svm.SVC(), tuned_parameters, cv=10)
-  clf.fit(bow, classes)
+  if (grid.best_estimator_.kernel != 'linear'):
+    output += '\tGamma: %f\n' % (grid.best_estimator_.gamma)
 
-  output = "\n--> Melhores parametros: --> C: %f \t Gamma: %f\n" % (clf.best_estimator_.C, clf.best_estimator_.gamma)
-  return output + acc(cross_validation.cross_val_score(svm.SVC(kernel=clf.best_estimator_.kernel,C=clf.best_estimator_.C, gamma=clf.best_estimator_.gamma), bow, classes, cv=10))
+  clf = svm.SVC(kernel=grid.best_estimator_.kernel,
+        C=grid.best_estimator_.C,
+        gamma=grid.best_estimator_.gamma)
+
+  return output + acc(
+    cross_validation.cross_val_score(
+      clf, bow, classes, cv=10))
 
 
   #encontra os vocabulos e torna-os unicos
