@@ -232,6 +232,7 @@ function suspiciousComment(content) {
 
 
 $(document).ready(function(){
+  //var csrftoken = $('[name="csrfmiddlewaretoken"]').val();
   var csrftoken = $.cookie('csrftoken');
   var video_id = $('#video_title').attr('video_id');
   getVideoMeta(video_id);
