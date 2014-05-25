@@ -17,6 +17,10 @@
  margin-bottom: 0px;
 }
 
+#comments {
+  word-wrap: break-word;
+}
+
 .loading-icon {
   background: white url("../img/loading.gif") no-repeat right bottom;
   width: 32px;

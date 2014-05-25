@@ -1,5 +1,7 @@
-import csv
+import os
 import numpy
+# import pickle
+from sklearn.externals import joblib
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.grid_search import GridSearchCV
 from sklearn import cross_validation
@@ -11,7 +13,6 @@ from sklearn.semi_supervised import LabelPropagation
 
 
 def classify(comments):
-  output = ''
   contents = []
   classes = []
 
@@ -25,119 +26,82 @@ def classify(comments):
 
   # CLASSIFIERS ======================================
 
-  output += "Multinomial NB:\n" + naiveBayes(bagOfWords, classes)
+  output = "Multinomial NB:\n" + naiveBayes(bagOfWords, classes)
   output += "\n\nLogistic Regression: " + logistic(bagOfWords, classes)
   output += "\n\nSVMLinear: " + svmLinear(bagOfWords, classes)
   output += "\n\nSVM: " + svmGS(bagOfWords, classes)
 
+  output += '\n\n\n(saving SVM to disk) ... (loading model SVM disk)\n\n'
+
+  p = svmLoaded(bagOfWords)
+  output += '\n\nComment | Prediction | Class\n'
+  for i in range(len(comments)):
+    output += '%s | %d | %d\n' % (comments[i].content, p[i], classes[i])
+
   return output
 
 def acc(scores):
-  print scores
   return "Accuracy: %0.2f%% (+/- %0.3f)" % (scores.mean() * 100, scores.std() * 2)
 
 def naiveBayes(bow, classes):
-  return acc(
-    cross_validation.cross_val_score(
-      naive_bayes.MultinomialNB(alpha=.01),
-      bow,
-      classes,
-      cv=10))
+  clf = naive_bayes.MultinomialNB(alpha=.01)
+  scores = cross_validation.cross_val_score(clf, bow, classes, cv=10)
+
+  output = acc(scores)
+  return output
+
 
 def logistic(bow, classes):
-  c = list((10.0**i) for i in range(-3,3))
-  tuned_parameters = [{'C': c}]
-  clf = GridSearchCV(linear_model.LogisticRegression(), tuned_parameters, cv=10)
-  clf.fit(bow, classes)
+  range5 = list((10.0**i) for i in range(-5,5))
+  param_grid = [{'C': range5}]
+  grid = GridSearchCV(linear_model.LogisticRegression(), param_grid, cv=10).fit(bow, classes)
+
+  clf = linear_model.LogisticRegression(C=grid.best_estimator_.C)
+  scores = cross_validation.cross_val_score(clf, bow, classes, cv=10)
 
   output = '\n--> Melhores parametros:\n'
-  output += '\tC: %f\n' % (clf.best_estimator_.C)
-  return output + acc(
-    cross_validation.cross_val_score(
-      linear_model.LogisticRegression(C=clf.best_estimator_.C),
-      bow,
-      classes,
-      cv=10))
+  output += '\tC: %f\n' % (grid.best_estimator_.C)
+  output += acc(scores)
+  return output
 
 def svmLinear(bow, classes):
-  c = list((10.0**i) for i in range(-3,3))
-  tuned_parameters = [{'C': c}]
-  clf = GridSearchCV(svm.LinearSVC(), tuned_parameters, cv=10)
-  clf.fit(bow, classes)
+  range5 = list((10.0**i) for i in range(-5,5))
+  param_grid = [{'C': range5}]
+  grid = GridSearchCV(svm.LinearSVC(), param_grid, cv=10).fit(bow, classes)
+
+  clf = svm.LinearSVC(C=grid.best_estimator_.C)
+  scores = cross_validation.cross_val_score(clf, bow, classes, cv=10)
 
   output = '\n--> Melhores parametros:\n'
-  output += '\tC: %f\n' % (clf.best_estimator_.C)
-
-  return output + acc(
-    cross_validation.cross_val_score(
-      svm.LinearSVC(C=clf.best_estimator_.C),
-      bow,
-      classes,
-      cv=10))
+  output += '\tC: %f\n' % (grid.best_estimator_.C)
+  output += acc(scores)
+  return output
 
 def svmGS(bow, classes):
-  param_c = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
-  param_gamma = [0.0001, 0.001, 0.01, 0.1]
+  range5 = list((10.0**i) for i in range(-5,5))
   param_grid = [
-    {'C': param_c, 'kernel': ['linear']},
-    {'C': param_c, 'gamma': param_gamma, 'kernel': ['rbf']},
-    {'C': param_c, 'gamma': param_gamma, 'kernel': ['poly']},
+    {'C': range5, 'kernel': ['linear']},
+    {'C': range5, 'gamma': range5, 'kernel': ['rbf']},
+    {'C': range5, 'gamma': range5, 'kernel': ['poly']},
   ]
-
-  grid = GridSearchCV(svm.SVC(), param_grid, cv=10)
-  grid.fit(bow, classes)
-
-  output = '\n--> Melhores parametros:\n'
-  output += '\tKernel: %s\n' % (grid.best_estimator_.kernel)
-  output += '\tC: %f\n' % (grid.best_estimator_.C)
-
-  if (grid.best_estimator_.kernel != 'linear'):
-    output += '\tGamma: %f\n' % (grid.best_estimator_.gamma)
+  grid = GridSearchCV(svm.SVC(), param_grid, cv=10).fit(bow, classes)
 
   clf = svm.SVC(kernel=grid.best_estimator_.kernel,
         C=grid.best_estimator_.C,
         gamma=grid.best_estimator_.gamma)
+  scores = cross_validation.cross_val_score(clf, bow, classes, cv=10)
 
-  return output + acc(
-    cross_validation.cross_val_score(
-      clf, bow, classes, cv=10))
+  joblib.dump(clf.fit(bow, classes), os.path.join('app', 'classification_models', 'filename.pkl'))
+
+  output = '\n--> Melhores parametros:\n'
+  output += '\tKernel: %s\n' % (grid.best_estimator_.kernel)
+  output += '\tC: %f\n' % (grid.best_estimator_.C)
+  if (grid.best_estimator_.kernel != 'linear'):
+    output += '\tGamma: %f\n' % (grid.best_estimator_.gamma)
+  output += acc(scores)
+  return output
 
 
-  #encontra os vocabulos e torna-os unicos
-  #texts = [set([word for word in document.lower().split()]) for document in documents]
-
-  #monta dicionario pelo corpora do gensim
-  #dictionary = corpora.Dictionary(texts)
-  #print dictionary
-
-  #transforma o vetor em bag of words
-  #corpus = [dictionary.doc2bow(text) for text in texts]
-  #print corpus
-
-  #transforma vetor em matriz do NumPy e carrega como Table do Orange
-  #numpy_matrix = gensim.matutils.corpus2dense(corpus,len(dictionary.keys()));
-  #numpy_matrix = numpy_matrix.transpose()
-  #numpy_classes = numpy.array([classes]).transpose()
-  #numpy_matrix = numpy.hstack((numpy_matrix,numpy_classes))
-  #d = Orange.data.Domain([Orange.feature.Discrete('a%i' % x, values=["0","1"])  for x in range(len(dictionary.keys())+1)])
-  #data = Orange.data.Table(d,numpy_matrix)
-
-  #data = list(data);
-
-  #naive bayes
-  #classifier = Orange.classification.bayes.NaiveLearner(data)
-  #f = open('result_nb.txt','w')
-  #for tweet in data:
-      #tweet_id \t original \t classificado
-      #f.write(str(tweets_id[data.index(tweet)])+'\t'+str(classifier(tweet))+'\t'+str(tweet.getclass())+'\n')
-
-  #f.close()
-
-  #svm
-  #classifier = Orange.classification.svm.SVMLearner(data)
-  #f = open('result_svm.txt','w')
-  #for tweet in data:
-      #tweet_id \t original \t classificado
-      #f.write(str(tweets_id[data.index(tweet)])+'\t'+str(classifier(tweet))+'\t'+str(tweet.getclass())+'\n')
-
-  #f.close()
+def svmLoaded(bow):
+  clf = joblib.load(os.path.join('app', 'classification_models', 'filename.pkl'))
+  return clf.predict(bow)
