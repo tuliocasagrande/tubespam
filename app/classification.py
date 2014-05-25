@@ -24,6 +24,9 @@ def classify(comments):
   vectorizer = CountVectorizer(min_df=1)
   bagOfWords = vectorizer.fit_transform(contents)
 
+  if not os.path.exists(os.path.join('app', 'classification_models')):
+    os.makedirs(os.path.join('app', 'classification_models'))
+
   # CLASSIFIERS ======================================
 
   output = "Multinomial NB:\n" + naiveBayes(bagOfWords, classes)
