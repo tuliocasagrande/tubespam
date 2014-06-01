@@ -1,18 +1,28 @@
 import os
 import numpy
-# import pickle
 from sklearn.externals import joblib
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.grid_search import GridSearchCV
+from sklearn.svm import LinearSVC
+from sklearn.svm import SVC
 from sklearn import cross_validation
-from sklearn import naive_bayes, svm, linear_model
 from sklearn.semi_supervised import LabelSpreading
 from sklearn.semi_supervised import LabelPropagation
 #from sklearn import metrics
 #from sklearn.metrics import classification_report
 
+def getClassifier(video_id):
+  try:
+    return joblib.load(os.path.join('app', 'classification_files', video_id+'_clf'))
+  except:
+    return None
 
-def classify(comments):
+# comments = QuerySet( [Comment(id, content, tag) ])
+def train(video_id, comments):
+
+  if not os.path.exists(os.path.join('app', 'classification_files')):
+    os.makedirs(os.path.join('app', 'classification_files'))
+
   contents = []
   classes = []
 
@@ -20,91 +30,92 @@ def classify(comments):
     contents.append(c.content)
     classes.append(1 if c.tag else 0)
 
-  classes = numpy.asarray(classes)
   vectorizer = CountVectorizer(min_df=1)
-  bagOfWords = vectorizer.fit_transform(contents)
+  X = vectorizer.fit_transform(contents)
+  y = numpy.asarray(classes)
 
-  if not os.path.exists(os.path.join('app', 'classification_models')):
-    os.makedirs(os.path.join('app', 'classification_models'))
+  # LinearSVM
+  clf, scores = svmLinear(X, y)
+  #print clf.get_params()['C']
 
-  # CLASSIFIERS ======================================
+  # SVM
+  # clf, scores = svm(X, y)
 
-  output = "Multinomial NB:\n" + naiveBayes(bagOfWords, classes)
-  output += "\n\nLogistic Regression: " + logistic(bagOfWords, classes)
-  output += "\n\nSVMLinear: " + svmLinear(bagOfWords, classes)
-  output += "\n\nSVM: " + svmGS(bagOfWords, classes)
+  print 'TRAIN:'
+  print 'Comment - Prediction - Label'
+  p = clf.predict(X)
+  for i in range(len(contents)):
+    print '%s - %d - %d' % (contents[i], p[i], y[i])
 
-  output += '\n\n\n(saving SVM to disk) ... (loading model SVM disk)\n\n'
+  # Saving vectorizer & classifier
+  joblib.dump(vectorizer, os.path.join('app', 'classification_files', video_id+'_vct'))
+  joblib.dump(clf, os.path.join('app', 'classification_files', video_id+'_clf'))
 
-  p = svmLoaded(bagOfWords)
-  output += '\n\nComment | Prediction | Class\n'
-  for i in range(len(comments)):
-    output += '%s | %d | %d\n' % (comments[i].content, p[i], classes[i])
+  # Returning scores
+  # x +/- 2sigma (approximately a 95% confidence interval)
+  return scores.mean()*100, scores.std()*2
 
-  return output
+# untagged_contents = [content, ...]
+def predict(video_id, untagged_contents):
 
-def acc(scores):
-  return "Accuracy: %0.2f%% (+/- %0.3f)" % (scores.mean() * 100, scores.std() * 2)
+  # Loading vectorizer & classifier
+  vectorizer = joblib.load(os.path.join('app', 'classification_files', video_id+'_vct'))
+  clf = joblib.load(os.path.join('app', 'classification_files', video_id+'_clf'))
 
-def naiveBayes(bow, classes):
-  clf = naive_bayes.MultinomialNB(alpha=.01)
-  scores = cross_validation.cross_val_score(clf, bow, classes, cv=10)
+  X = vectorizer.transform(untagged_contents)
 
-  output = acc(scores)
-  return output
+  print 'PREDICTION:'
+  print 'Comment - Prediction'
+  p = clf.predict(X)
+  for i in range(len(untagged_contents)):
+    print '%s - %d' % (untagged_contents[i], p[i])
 
+  return p
 
-def logistic(bow, classes):
+def svmLinear(X, y):
   range5 = list((10.0**i) for i in range(-5,5))
-  param_grid = [{'C': range5}]
-  grid = GridSearchCV(linear_model.LogisticRegression(), param_grid, cv=10).fit(bow, classes)
+  param_grid = {'C': range5}
 
-  clf = linear_model.LogisticRegression(C=grid.best_estimator_.C)
-  scores = cross_validation.cross_val_score(clf, bow, classes, cv=10)
+  # It will:
+  # 1- Perform the GridSearch;
+  # 2- Cross-validate with 10 folds
+  # 3- Generate an instance of the trained classifier (best_estimator_)
+  grid = GridSearchCV(LinearSVC(), param_grid, cv=10)
+  grid.fit(X, y)
 
-  output = '\n--> Melhores parametros:\n'
-  output += '\tC: %f\n' % (grid.best_estimator_.C)
-  output += acc(scores)
-  return output
+  # Only parameters passed in param_grid (and therefore evaluated as the best)
+  best_parameters = grid.best_params_
 
-def svmLinear(bow, classes):
-  range5 = list((10.0**i) for i in range(-5,5))
-  param_grid = [{'C': range5}]
-  grid = GridSearchCV(svm.LinearSVC(), param_grid, cv=10).fit(bow, classes)
+  # Array with accuracies achieved by cross-validation
+  for params, mean_score, scores in grid.grid_scores_:
+    if params == best_parameters:
+      best_scores = scores
 
-  clf = svm.LinearSVC(C=grid.best_estimator_.C)
-  scores = cross_validation.cross_val_score(clf, bow, classes, cv=10)
+  # Returning instance of the classifier and accuracies
+  return grid.best_estimator_, best_scores
 
-  output = '\n--> Melhores parametros:\n'
-  output += '\tC: %f\n' % (grid.best_estimator_.C)
-  output += acc(scores)
-  return output
-
-def svmGS(bow, classes):
+def svm(X, y):
   range5 = list((10.0**i) for i in range(-5,5))
   param_grid = [
-    {'C': range5, 'kernel': ['linear']},
-    {'C': range5, 'gamma': range5, 'kernel': ['rbf']},
-    {'C': range5, 'gamma': range5, 'kernel': ['poly']},
+    {'kernel': ['linear'], 'C': range5},
+    {'kernel': ['rbf'], 'C': range5, 'gamma': range5},
+    {'kernel': ['poly'], 'C': range5, 'gamma': range5},
   ]
-  grid = GridSearchCV(svm.SVC(), param_grid, cv=10).fit(bow, classes)
 
-  clf = svm.SVC(kernel=grid.best_estimator_.kernel,
-        C=grid.best_estimator_.C,
-        gamma=grid.best_estimator_.gamma)
-  scores = cross_validation.cross_val_score(clf, bow, classes, cv=10)
+  # It will:
+  # 1- Perform the GridSearch;
+  # 2- Cross-validate with 10 folds
+  # 3- Generate an instance of the trained classifier (best_estimator_)
+  grid = GridSearchCV(SVC(), param_grid, cv=10)
+  grid.fit(X, y)
 
-  joblib.dump(clf.fit(bow, classes), os.path.join('app', 'classification_models', 'filename.pkl'))
+  # Only parameters passed in param_grid (and therefore evaluated as the best)
+  best_parameters = grid.best_params_
 
-  output = '\n--> Melhores parametros:\n'
-  output += '\tKernel: %s\n' % (grid.best_estimator_.kernel)
-  output += '\tC: %f\n' % (grid.best_estimator_.C)
-  if (grid.best_estimator_.kernel != 'linear'):
-    output += '\tGamma: %f\n' % (grid.best_estimator_.gamma)
-  output += acc(scores)
-  return output
+  # Array with accuracies achieved by cross-validation
+  for params, mean_score, scores in grid.grid_scores_:
+    if params == best_parameters:
+      best_scores = scores
 
-
-def svmLoaded(bow):
-  clf = joblib.load(os.path.join('app', 'classification_models', 'filename.pkl'))
-  return clf.predict(bow)
+  # Returning instance of the classifier and accuracies
+  return grid.best_estimator_, best_scores

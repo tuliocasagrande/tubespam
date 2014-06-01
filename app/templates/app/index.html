@@ -1,15 +1,17 @@
 {% extends "app/base.html" %}
 
+{% block title %}{% endblock %}
+
 {% block content %}
-  <div class="large-8 columns" role="content">
-  {% if videos %}
-    <ul>
-    {% for v in videos %}
-      <li><a href="/watch?v={{ v.id }}">{{ v.id }}</a></li>
-    {% endfor %}
-    </ul>
-  {% else %}
-    <h3>No videos are available.</h3>
-  {% endif %}
-  </div>
+    <div class="large-8 columns" role="content">
+    {% if videos %}
+      <ul>
+      {% for v in videos %}
+        <li><a href="/watch?v={{ v.id }}">{{ v.id }}</a></li>
+      {% endfor %}
+      </ul>
+    {% else %}
+      <h3>No videos available.</h3>
+    {% endif %}
+    </div>
 {% endblock %}

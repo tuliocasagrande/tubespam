@@ -3,66 +3,66 @@
 {% block title %}Tubespam - Loading{% endblock %}
 
 {% block content %}
-  <!-- Main Content -->
-  <div class="large-8 columns" role="content">
-    <article>
-      <iframe width="640" height="360" src="//www.youtube.com/embed/{{ video_id }}" frameborder="0" allowfullscreen></iframe>
-      <h3 id="video_title" video_id="{{ video_id }}">Loading...</h3>
+    <!-- Main Content -->
+    <div class="large-8 columns" role="content">
+      <article>
+        <iframe width="640" height="360" src="//www.youtube.com/embed/{{ video_id }}" frameborder="0" allowfullscreen></iframe>
+        <h3 id="video_title" video_id="{{ video_id }}">Loading...</h3>
 
-      <small id="video_publish_date"></small>
-      <p id="video_content"></p>
-    </article>
+        <small id="video_publish_date"></small>
+        <p id="video_content"></p>
+      </article>
 
-    <hr />
-    {% csrf_token %}
-    <div id="comments"></div>
-    <a href id="moreComments" class="button expand secondary tiny loading-icon" disabled>Loading ...</a>
-  </div>
-  <!-- End Main Content -->
-
-  <!-- Sidebar -->
-  <aside class="large-4 columns">
-
-    <!-- <h5>Categories</h5> -->
-    <!-- <ul class="side-nav">
-      <li><a href="#">News</a></li>
-      <li><a href="#">Code</a></li>
-      <li><a href="#">Design</a></li>
-      <li><a href="#">Fun</a></li>
-      <li><a href="#">Weasels</a></li>
-    </ul> -->
-
-    <div id="summary" class="panel">
-      <h4>Summary</h4>
-      <div>
-        <strong># views:</strong> <span id="viewCount">0</span>
-      </div>
-
-      <div>
-        <strong># comments:</strong> <span id="commentCount">0</span>
-        <small>The actual count of comments may differ because, since November 2013, shares on Google+ are counted as comments.</small>
-      </div>
-
-      <div>
-        <strong># tagged comments:</strong>
-        <span id="taggedCount">0</span>
-      </div>
-
-      <div>
-        <strong># tagged spam:</strong>
-        <span id="spamCount">0</span>
-      </div>
-
-      <div>
-        <strong># tagged ham:</strong>
-        <span id="hamCount">0</span>
-      </div>
-
-      <a href="classify?v={{ video_id }}" class="button expand tiny" disabled>Classify</a>
-
+      <hr />
+      {% csrf_token %}
+      <div id="comments"></div>
+      <a href id="moreComments" class="button expand secondary tiny loading-icon" disabled>Loading ...</a>
     </div>
-  </aside>
-  <!-- End Sidebar -->
+    <!-- End Main Content -->
+
+    <!-- Sidebar -->
+    <aside class="large-4 columns">
+
+      <!-- <h5>Categories</h5> -->
+      <!-- <ul class="side-nav">
+        <li><a href="#">News</a></li>
+        <li><a href="#">Code</a></li>
+        <li><a href="#">Design</a></li>
+        <li><a href="#">Fun</a></li>
+        <li><a href="#">Weasels</a></li>
+      </ul> -->
+
+      <div id="summary" class="panel">
+        <h4>Summary</h4>
+        <div>
+          <strong># views:</strong> <span id="viewCount">0</span>
+        </div>
+
+        <div>
+          <strong># comments:</strong> <span id="commentCount">0</span>
+          <small>The actual count of comments may differ because, since November 2013, shares on Google+ are counted as comments.</small>
+        </div>
+
+        <div>
+          <strong># tagged comments:</strong>
+          <span id="taggedCount">0</span>
+        </div>
+
+        <div>
+          <strong># tagged spam:</strong>
+          <span id="spamCount">0</span>
+        </div>
+
+        <div>
+          <strong># tagged ham:</strong>
+          <span id="hamCount">0</span>
+        </div>
+
+        <a href="classify?v={{ video_id }}" class="button expand tiny" disabled>Classify</a>
+
+      </div>
+    </aside>
+    <!-- End Sidebar -->
 {% endblock %}
 
 {% block js %}
