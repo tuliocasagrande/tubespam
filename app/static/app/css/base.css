@@ -1,5 +1,6 @@
 #content {
-  min-height: 270px;
+  /*min-height: 270px;*/
+  min-height: 350px;
 }
 
 #summary > div {
@@ -13,7 +14,7 @@
   }
 }
 
-.comment_tag {
+.comment_tag, .comment_content {
  margin-bottom: 0px;
 }
 

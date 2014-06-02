@@ -3,6 +3,7 @@
 {% block title %}Tubespam - Loading{% endblock %}
 
 {% block content %}
+    {% load humanize %}
     <!-- Main Content -->
     <div class="large-8 columns" role="content">
       <article>
@@ -15,23 +16,15 @@
 
       <hr />
       {% csrf_token %}
-      <div id="comments"></div>
+      <div id="comments">
+        {% include "app/taggedComments.html" %}
+      </div>
       <a href id="moreComments" class="button expand secondary tiny loading-icon" disabled>Loading ...</a>
     </div>
     <!-- End Main Content -->
 
     <!-- Sidebar -->
     <aside class="large-4 columns">
-
-      <!-- <h5>Categories</h5> -->
-      <!-- <ul class="side-nav">
-        <li><a href="#">News</a></li>
-        <li><a href="#">Code</a></li>
-        <li><a href="#">Design</a></li>
-        <li><a href="#">Fun</a></li>
-        <li><a href="#">Weasels</a></li>
-      </ul> -->
-
       <div id="summary" class="panel">
         <h4>Summary</h4>
         <div>
@@ -45,21 +38,20 @@
 
         <div>
           <strong># tagged comments:</strong>
-          <span id="taggedCount">0</span>
+          <span id="taggedCount" value="{{ comments | length }}">{{ comments | length | intcomma }}</span>
         </div>
 
         <div>
           <strong># tagged spam:</strong>
-          <span id="spamCount">0</span>
+          <span id="spamCount" value="{{ spam_count }}">{{ spam_count | intcomma }}</span>
         </div>
 
         <div>
           <strong># tagged ham:</strong>
-          <span id="hamCount">0</span>
+          <span id="hamCount" value="{{ ham_count }}">{{ ham_count | intcomma }}</span>
         </div>
 
         <a href="classify?v={{ video_id }}" class="button expand tiny" disabled>Classify</a>
-
       </div>
     </aside>
     <!-- End Sidebar -->

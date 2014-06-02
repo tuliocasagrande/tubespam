@@ -5,9 +5,20 @@ var SUSPICIOUS_SPAM = [];
 var SUSPICIOUS_HAM = [];
 var NEXT_URL;
 
+var BUTTON = 'comment_tag right tiny secondary button';
 var TAG = '<div class="small-3 columns">' +
-          '<span class="comment_tag right tiny secondary button spam" tag="spam">Spam</span>' +
-          '<span class="comment_tag right tiny secondary button ham" tag="ham">Ham</span>' +
+          '<span class="'+ BUTTON +' spam" tag="spam">Spam</span>' +
+          '<span class="'+ BUTTON +' ham" tag="ham">Ham</span>' +
+          '</div>';
+
+var SPAM_TAG = '<div class="small-3 columns">' +
+          '<span class="'+ BUTTON +' alert spam" disabled tag="spam">Spam</span>' +
+          '<span class="'+ BUTTON +' ham" tag="ham">Ham</span>' +
+          '</div>';
+
+var HAM_TAG = '<div class="small-3 columns">' +
+          '<span class="'+ BUTTON +' spam" tag="spam">Spam</span>' +
+          '<span class="'+ BUTTON +' success ham" disabled tag="ham">Ham</span>' +
           '</div>';
 
 var $moreComments = $('#moreComments');
@@ -113,15 +124,15 @@ function getNewComments(url, call) {
       NEXT_URL = data.feed.link[data.feed.link.length-1].href;
     } else {
       NEXT_URL = null;
-      putNewComments();
+      sendToClassifier();
       return;
     }
 
-    if (call > 20 || (SUSPICIOUS_SPAM.length > 20 && SUSPICIOUS_HAM.length > 30)) {
-      putNewComments();
+    if (call > 10) {
+      sendToClassifier();
       return;
     }
-
+    console.log(call);
     getNewComments(NEXT_URL, call+1);
   });
 }
@@ -150,27 +161,56 @@ function loadNewComments(data) {
   }
 }
 
-function putNewComments() {
-  appendToHtml(SUSPICIOUS_SPAM, 20);
-  appendToHtml(SUSPICIOUS_HAM, 30);
+function sendToClassifier() {
+  var comments = mergeLists(SUSPICIOUS_SPAM, SUSPICIOUS_HAM);
 
-  if (SUSPICIOUS_SPAM.length == 0 && SUSPICIOUS_HAM.length == 0 &&
+  $.ajax({
+    type: 'POST',
+    url: '/train',
+    headers: {'X-CSRFToken': CSRFTOKEN},
+    data: { v: VIDEO_ID, 'comments[]': comments },
+    dataType: 'json'
+  }).done(function(data) {
+
+    for (var key in data) {
+      if (data[key].tag === "1") {
+        $('#comments').append(formattedComment(key,
+          data[key].content, SPAM_TAG, 'manual'));
+      } else {
+        $('#comments').append(formattedComment(key,
+          data[key].content, HAM_TAG, 'manual'));
+      }
+    }
+
+    if (SUSPICIOUS_SPAM.length == 0 && SUSPICIOUS_HAM.length == 0 &&
       NEXT_URL == null) {
+      $moreComments.remove();
+    } else {
+      unlockMoreCommentsButton();
+    }
+  }).fail(function(data) {
     $moreComments.remove();
-  } else {
-    unlockMoreCommentsButton();
-  }
+    console.log('ERROR JSON!!!');
+    console.log(data.responseText);
+  });
 }
 
-function appendToHtml(list, count) {
-  var newComment;
-  var len = list.length < count ? list.length : count;
+function mergeLists(listA, listB) {
+  var newList = [];
 
+  var len = listA.length < 40 ? listA.length : 40;
   for (var i = 0; i < len; i++) {
-    newComment = list.shift();
-    $('#comments').append(formattedComment(
-      newComment.comment_id, newComment.content, TAG));
+    newComment = listA.shift();
+    newList.push(JSON.stringify(newComment));
   }
+
+  len = listB.length < 60 ? listB.length : 60;
+  for (i = 0; i < len; i++) {
+    newComment = listB.shift();
+    newList.push(JSON.stringify(newComment));
+  }
+
+  return newList;
 }
 
 function suspiciousComment(content) {
@@ -259,7 +299,7 @@ $(document).ready(function(){
         lockMoreCommentsButton();
         getNewComments(NEXT_URL, 0);
       } else {
-        putNewComments();
+        sendToClassifier();
       }
     }
 

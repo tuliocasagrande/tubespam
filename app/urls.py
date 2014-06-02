@@ -9,11 +9,9 @@ urlpatterns = patterns('',
   # ex: /watch?v=12345678901
   url(r'^watch$', views.watch, name='watch'),
 
-  # ex: /getTaggedComments?v=12345678901
-  url(r'^getTaggedComments$', views.getTaggedComments, name='getTaggedComments'),
-
-  url(r'^saveComment$', views.saveComment, name='saveComment'),
-
   # ex: /classify?v=12345678901
   url(r'^classify$', views.classify, name='classify'),
+
+  url(r'^saveComment$', views.saveComment, name='saveComment'),
+  url(r'^train$', views.train, name='train'),
 )

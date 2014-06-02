@@ -1,0 +1,15 @@
+      {% for c in comments %}
+        <div class="comment row" tagType="manual" comment_id="{{ c.id }}">
+          <p class="comment_content small-9 columns">{{ c.content }}</p>
+          <div class="small-3 columns">
+          {% if c.tag %}
+            <span class="comment_tag right tiny secondary button alert spam" disabled tag="spam">Spam</span>
+            <span class="comment_tag right tiny secondary button ham" tag="ham">Ham</span>
+          {% else %}
+            <span class="comment_tag right tiny secondary button spam" tag="spam">Spam</span>
+            <span class="comment_tag right tiny secondary button success ham" disabled tag="ham">Ham</span>
+          {% endif %}
+          </div>
+        </div>
+        <hr/>
+      {% endfor %}
