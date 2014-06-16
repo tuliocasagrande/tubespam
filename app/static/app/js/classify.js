@@ -128,7 +128,7 @@ function getNewComments(url, call) {
       return;
     }
 
-    if (call > 10) {
+    if (call > 10 || (SUSPICIOUS_SPAM.length > 40 && SUSPICIOUS_HAM.length > 60)) {
       sendToClassifier();
       return;
     }
@@ -197,7 +197,7 @@ function sendToClassifier() {
 
 function mergeLists(listA, listB) {
   var newList = [];
-
+  var newComment;
   var len = listA.length < 40 ? listA.length : 40;
   for (var i = 0; i < len; i++) {
     newComment = listA.shift();

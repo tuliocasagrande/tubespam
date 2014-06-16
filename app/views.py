@@ -80,6 +80,7 @@ def classify(request):
      output['len_error'] = True
      return render(request, 'app/classify.html', output)
 
+  # Save to use with the API v3 (when available)
   # elif video.num_untrd_comments < 5 and output['clf'] != None:
   #   pred = classification.predict(video_id, test())
 
@@ -91,8 +92,8 @@ def classify(request):
   #   output['clf'] = classification.getClassifier(video_id)
 
 
-  # output['acc'] = video.acc
-  # output['stddev'] = video.stddev
+  output['acc'] = video.acc
+  output['stddev'] = video.stddev
   output['comments'] = comments
   # output['prediction'] = zip(test(), pred)
   return render(request, 'app/classify.html', output)
@@ -115,17 +116,23 @@ def train(request):
           pred = classification.predict(video_id, untagged_comments)
 
         else:
-          video.acc, video.stddev = classification.train(video_id, comments, untagged_comments)
+          if spam_count + ham_count < 100:
+            video.acc, video.stddev = classification.train(video_id, comments, untagged_comments)
+          else:
+            video.acc, video.stddev = classification.train(video_id, comments, [])
+
           video.num_untrd_comments = 0
           video.save()
           pred = classification.predict(video_id, untagged_comments)
 
         json = '"{0}":{{"content":"{1}","tag":"{2}"}}'
-        for i in range(len(untagged_comments)):
-          output += json.format(untagged_comments[i].id, untagged_comments[i].getEscapedContent(), pred[i])
-          if i != len(untagged_comments)-1:
-            output += ','
+        # for i in range(len(untagged_comments)):
+        #   output += json.format(untagged_comments[i].id, untagged_comments[i].getEscapedContent(), pred[i])
+        #   if i != len(untagged_comments)-1:
+        #     output += ','
 
+        output += ','.join([json.format(untagged_comments[i].id, untagged_comments[i].getEscapedContent(), pred[i])
+                            for i in range(len(untagged_comments))])
       output += '}'
 
   return HttpResponse(output)

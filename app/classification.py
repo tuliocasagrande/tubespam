@@ -19,6 +19,7 @@ def getClassifier(video_id):
 
 # comments = QuerySet( [Comment(id, content, tag) ])
 # untaggedComments = [Comment(id, content)]
+# if len(comments) >= 100, untaggedComments = []
 def train(video_id, comments, untaggedComments):
 
   if not os.path.exists(os.path.join('app', 'classification_files')):
@@ -40,23 +41,19 @@ def train(video_id, comments, untaggedComments):
   X = vectorizer.fit_transform(contents + untaggedContents)
   y = numpy.asarray(classes + untaggedClasses)
 
-  # First approach, semi-supervised learning
-  clf, scores = semiSupervised(X, y)
+  # if len(comments) < 100, it will perform semi-supervised learning
+  if untaggedContents != []:
+    # Semi-supervised learning with merged untagged and tagged comments
+    clf, scores = semiSupervised(X, y)
 
-  untagged_X = vectorizer.transform(untaggedContents)
-  print 'TRAIN:'
-  print 'Comment - Prediction - Label'
-  semiSupervised_y = clf.predict(untagged_X)
-  for i in range(len(untaggedContents)):
-    print '%s | %d | %d' % (untaggedContents[i], semiSupervised_y[i], untaggedClasses[i])
+    # Predicting classes of untagged commments and building a new y
+    untagged_X = vectorizer.transform(untaggedContents)
+    semiSupervised_y = clf.predict(untagged_X)
+    y = numpy.concatenate([numpy.asarray(classes), semiSupervised_y])
 
-  y = numpy.concatenate([numpy.asarray(classes), semiSupervised_y])
-
-  # LinearSVM
-  clf, scores = svmLinear(X, y)
-
-  # SVM
-  # clf, scores = svm(X, y)
+  # Fiting the classifier with real and predicted classes
+  clf, scores = svmLinear(X, y) # LinearSVM
+  # clf, scores = svm(X, y)     # SVM
 
   # Saving vectorizer & classifier
   joblib.dump(vectorizer, os.path.join('app', 'classification_files', video_id+'_vct'))
@@ -78,12 +75,7 @@ def predict(video_id, untaggedComments):
     contents.append(c.content)
 
   X = vectorizer.transform(contents)
-
-  print 'PREDICTION:'
-  print 'Comment - Prediction'
   p = clf.predict(X)
-  # for i in range(len(contents)):
-    # print '%s - %d' % (contents[i], p[i])
 
   return p
 
