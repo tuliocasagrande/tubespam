@@ -169,7 +169,7 @@ function appendToHtml(list, count) {
   for (var i = 0; i < len; i++) {
     newComment = list.shift();
     $('#comments').append(formattedComment(
-      newComment.comment_id, newComment.content, TAG));
+      newComment.comment_id, newComment.content, TAG, 'untagged'));
   }
 }
 
@@ -225,6 +225,13 @@ function saveComment(saveButton) {
     }
 
     sibling.removeAttr('disabled');
+
+    if (parseInt($spamCount.attr('value')) >= 10 && parseInt($hamCount.attr('value')) >= 10) {
+      $('#classify-button').removeAttr('disabled');
+    } else {
+      $('#classify-button').attr('disabled', true);
+    }
+
     console.log(success);
   });
 }
@@ -264,6 +271,12 @@ $(document).ready(function(){
     }
 
     return false;
+  });
+
+  $('#classify-button').click(function(event) {
+    if ($(this).attr('disabled')) {
+      event.preventDefault();
+    }
   });
 
 });

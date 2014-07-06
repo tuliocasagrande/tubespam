@@ -14,4 +14,5 @@ urlpatterns = patterns('',
 
   url(r'^saveComment$', views.saveComment, name='saveComment'),
   url(r'^train$', views.train, name='train'),
+  url(r'^export$', views.export, name='export'),
 )

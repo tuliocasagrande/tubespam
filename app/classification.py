@@ -63,6 +63,7 @@ def train(video_id, comments, untaggedComments):
   # x +/- 2sigma (approximately a 95% confidence interval)
   return scores.mean()*100, scores.std()*2
 
+
 # untaggedComments = [Comment(id, content)]
 def predict(video_id, untaggedComments):
 

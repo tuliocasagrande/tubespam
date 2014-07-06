@@ -62,6 +62,8 @@ def retrieveVideo(video_id):
 
   return video
 
+
+# With the API v2, this method just render the page
 def classify(request):
   video_id = request.GET.get('v')
   if not video_id:
@@ -105,6 +107,7 @@ def train(request):
 
       video_id = request.POST['v']
       video = Video.objects.get(id=video_id)
+      print request.POST.getlist('comments[]')
       untagged_comments = prepareNewComments(request.POST.getlist('comments[]'))
       comments = Comment.objects.filter(video_id=video_id)
       spam_count = comments.filter(tag=True).count()
@@ -126,17 +129,43 @@ def train(request):
           pred = classification.predict(video_id, untagged_comments)
 
         json = '"{0}":{{"content":"{1}","tag":"{2}"}}'
-        # for i in range(len(untagged_comments)):
-        #   output += json.format(untagged_comments[i].id, untagged_comments[i].getEscapedContent(), pred[i])
-        #   if i != len(untagged_comments)-1:
-        #     output += ','
-
-        output += ','.join([json.format(untagged_comments[i].id, untagged_comments[i].getEscapedContent(), pred[i])
+        output += ','.join([json.format(untagged_comments[i].id, untagged_comments[i].getEscapedContentJson(), pred[i])
                             for i in range(len(untagged_comments))])
       output += '}'
 
   return HttpResponse(output)
 
+
+def export(request):
+  video_id = request.POST.get('v')
+  if not video_id:
+    return redirect('index')
+
+  exportOption = request.POST.get('export-option')
+  comments = Comment.objects.filter(video_id=video_id)
+  untagged_comments = prepareNewComments(request.POST.getlist('comments'))
+
+  csv = 'COMMENT_ID,CONTENT,TAG\n'
+  for each in comments:
+    content = each.getEscapedContentCsv()
+    tag = 1 if each.tag else 0
+    csv += '{0},"{1}",{2}\n'.format(each.id, content, tag)
+
+  if exportOption == 'tu':
+    for each in untagged_comments:
+      content = each.getEscapedContentCsv()
+      csv += '{0},"{1}",-1\n'.format(each.id, content)
+
+  elif exportOption == 'tc':
+    # TODO, FIX IT!!!
+    # Classify and put proper tag (0, 1)
+    for each in untagged_comments:
+      content = each.getEscapedContentCsv()
+      csv += '{0},"{1}",-1\n'.format(each.id, content)
+
+  response = HttpResponse(csv, content_type='text/plain')
+  response['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(video_id)
+  return response
 
 def prepareNewComments(untagged_comments):
   newComments = []

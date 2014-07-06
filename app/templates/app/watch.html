@@ -11,7 +11,7 @@
         <h3 id="video_title" video_id="{{ video_id }}">Loading...</h3>
 
         <small id="video_publish_date"></small>
-        <p id="video_content"></p>
+        <div><small id="video_content"></small></div>
       </article>
 
       <hr />
@@ -51,7 +51,11 @@
           <span id="hamCount" value="{{ ham_count }}">{{ ham_count | intcomma }}</span>
         </div>
 
-        <a href="classify?v={{ video_id }}" class="button expand tiny" disabled>Classify</a>
+        {% if spam_count < 10 or ham_count < 10 %}
+        <a href="classify?v={{ video_id }}" id="classify-button" class="button expand tiny" disabled>Classify</a>
+        {% else %}
+        <a href="classify?v={{ video_id }}" id="classify-button" class="button expand tiny">Classify</a>
+        {% endif %}
       </div>
     </aside>
     <!-- End Sidebar -->

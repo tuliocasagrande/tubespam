@@ -14,7 +14,7 @@
   }
 }
 
-.comment_tag, .comment_content {
+.comment_tag, .comment_content, #export-button {
  margin-bottom: 0px;
 }
 

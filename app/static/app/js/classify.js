@@ -175,10 +175,10 @@ function sendToClassifier() {
     for (var key in data) {
       if (data[key].tag === "1") {
         $('#comments').append(formattedComment(key,
-          data[key].content, SPAM_TAG, 'manual'));
+          data[key].content, SPAM_TAG, 'automatic'));
       } else {
         $('#comments').append(formattedComment(key,
-          data[key].content, HAM_TAG, 'manual'));
+          data[key].content, HAM_TAG, 'automatic'));
       }
     }
 
@@ -270,7 +270,6 @@ function saveComment(saveButton) {
 }
 
 $(document).ready(function(){
-  //var CSRFTOKEN = $('[name="csrfmiddlewaretoken"]').val();
   CSRFTOKEN = $.cookie('csrftoken');
   VIDEO_ID = $('#video_title').attr('video_id');
 
@@ -304,6 +303,25 @@ $(document).ready(function(){
     }
 
     return false;
+  });
+
+  $('#export-form').submit(function() {
+    $('#export-comments').empty();
+    var exportOption = $('input[name=export-option]:checked', '#export-form').val();
+
+    if (exportOption !== 't') {
+
+      var $exportComments = $('#export-comments');
+      $('#comments').children('.comment[tagType=automatic]').each(function() {
+
+        var newComment = {comment_id: $(this).attr('comment_id'),
+                          content: $(this).find('.comment_content').html()};
+
+        newComment = JSON.stringify(newComment).replace(/"/g, '&quot;');
+        $exportComments.append('<input type="hidden" name="comments" value="'+newComment+'">')
+      });
+    }
+
   });
 
 });

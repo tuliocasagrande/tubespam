@@ -21,10 +21,17 @@ class Comment(models.Model):
   def getTag(self):
     return str(int(self.tag))
 
-  def getEscapedContent(self):
+  def getEscapedContentJson(self):
     content = self.content
     content = content.replace('\\', '\\\\')
     content = content.replace('"', '\\"')
+    content = content.replace('\n', ' ')
+    content = content.replace('\r', ' ')
+    return content.encode('utf-8')
+
+  def getEscapedContentCsv(self):
+    content = self.content
+    content = content.replace('"', '""')
     content = content.replace('\n', ' ')
     content = content.replace('\r', ' ')
     return content.encode('utf-8')

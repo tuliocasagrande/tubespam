@@ -10,7 +10,7 @@
         <h3 id="video_title" video_id="{{ video_id }}">Loading...</h3>
 
         <small id="video_publish_date"></small>
-        <p id="video_content"></p>
+        <div><small id="video_content"></small></div>
       </article>
 
       <hr />
@@ -76,14 +76,41 @@
           <span id="hamCount" value="{{ ham_count }}">{{ ham_count | intcomma }}</span>
         </div>
       {% if not len_error %}
-        <div><strong>Classifier:</strong> LinearSVC (c: {{ clf.get_params.C|floatformat:-5 }})</div>
+        <div>
+          <strong>Classifier:</strong>
+          LinearSVC (c: {{ clf.get_params.C|floatformat:-5 }})
+        </div>
 
         <div>
-          <strong>Accuracy:</strong> {{ acc|floatformat:2 }}% &#177; {{ stddev|floatformat:2 }}
+          <strong>Accuracy:</strong>
+          {{ acc|floatformat:2 }}% &#177; {{ stddev|floatformat:2 }}
         </div>
       {% endif %}
         <a href="watch?v={{ video_id }}" class="button expand tiny">Back to video</a>
+
+        <form id="export-form" action='/export' method="post">{% csrf_token %}
+          <fieldset>
+            <legend>Export Comments</legend>
+            <input type="hidden" name="v" value="{{ video_id }}">
+            <div id="export-comments"></div>
+
+            <div>
+              <input type="radio" name="export-option" value="t" id="t-radio" checked>
+              <label for="t-radio">Tagged only</label>
+            </div>
+            <div>
+              <input type="radio" name="export-option" value="tu" id="tu-radio">
+              <label for="tu-radio">Tagged and untagged</label>
+            </div>
+            <div>
+              <input type="radio" name="export-option" value="tc" id="tc-radio">
+              <label for="tc-radio">Tagged and classified</label>
+            </div>
+            <input type="submit" class="button tiny right" value="Export CSV">
+          </fieldset>
+        </form>
       </div>
+
     </aside>
     <!-- End Sidebar -->
 {% endblock %}
