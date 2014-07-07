@@ -107,7 +107,6 @@ def train(request):
 
       video_id = request.POST['v']
       video = Video.objects.get(id=video_id)
-      print request.POST.getlist('comments[]')
       untagged_comments = prepareNewComments(request.POST.getlist('comments[]'))
       comments = Comment.objects.filter(video_id=video_id)
       spam_count = comments.filter(tag=True).count()

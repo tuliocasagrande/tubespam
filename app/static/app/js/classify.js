@@ -108,32 +108,39 @@ function getVideoMeta(video_id) {
   });
 }
 
-function getNewComments(url, call) {
+function getNewComments(nextHandler, total_length, spam_length, ham_length) {
+
+  if (!nextHandler || (typeof nextHandler !== "function")) {
+    console.log('error: callback is not a function');
+    console.log(nextHandler);
+  }
 
   $.ajax({
     type: 'GET',
-    url: url,
+    url: NEXT_URL,
     dataType: 'json'
   }).fail(function() {
     $('#comments').append("Comments are disabled for this video.");
     $moreComments.remove();
   }).done(function(data){
     loadNewComments(data);
+    console.log(SUSPICIOUS_SPAM.length + SUSPICIOUS_HAM.length);
 
     if (data.feed.link[data.feed.link.length-1].rel == 'next') {
       NEXT_URL = data.feed.link[data.feed.link.length-1].href;
     } else {
       NEXT_URL = null;
-      sendToClassifier();
+      nextHandler();
       return;
     }
 
-    if (call > 10 || (SUSPICIOUS_SPAM.length > 40 && SUSPICIOUS_HAM.length > 60)) {
-      sendToClassifier();
+    if ((SUSPICIOUS_SPAM.length + SUSPICIOUS_HAM.length > total_length) ||
+        (SUSPICIOUS_SPAM.length > spam_length && SUSPICIOUS_HAM.length > ham_length)) {
+      nextHandler();
       return;
     }
-    console.log(call);
-    getNewComments(NEXT_URL, call+1);
+
+    getNewComments(nextHandler, total_length, spam_length, ham_length);
   });
 }
 
@@ -162,7 +169,7 @@ function loadNewComments(data) {
 }
 
 function sendToClassifier() {
-  var comments = mergeLists(SUSPICIOUS_SPAM, SUSPICIOUS_HAM);
+  var comments = mergeLists(SUSPICIOUS_SPAM, 40, SUSPICIOUS_HAM, 60);
 
   $.ajax({
     type: 'POST',
@@ -195,18 +202,19 @@ function sendToClassifier() {
   });
 }
 
-function mergeLists(listA, listB) {
+function mergeLists(spam_list, spam_length, ham_list, ham_length) {
   var newList = [];
   var newComment;
-  var len = listA.length < 40 ? listA.length : 40;
+
+  var len = spam_list.length < spam_length ? spam_list.length : spam_length;
   for (var i = 0; i < len; i++) {
-    newComment = listA.shift();
+    newComment = spam_list.shift();
     newList.push(JSON.stringify(newComment));
   }
 
-  len = listB.length < 60 ? listB.length : 60;
-  for (i = 0; i < len; i++) {
-    newComment = listB.shift();
+  len = ham_list.length < ham_length ? ham_list.length : ham_length;
+  for (var i = 0; i < len; i++) {
+    newComment = ham_list.shift();
     newList.push(JSON.stringify(newComment));
   }
 
@@ -269,7 +277,12 @@ function saveComment(saveButton) {
   });
 }
 
+function exportComments() {
+  $('#export-form').submit();
+}
+
 $(document).ready(function(){
+  /* Initializing some global variables */
   CSRFTOKEN = $.cookie('csrftoken');
   VIDEO_ID = $('#video_title').attr('video_id');
 
@@ -277,11 +290,15 @@ $(document).ready(function(){
     TAGGED_COMMENTS[$(this).attr('comment_id')] = $(this).attr('comment_id');
   });
 
+  /* Retrieving first informations */
   getVideoMeta(VIDEO_ID);
-  var url = 'https://gdata.youtube.com/feeds/api/videos/'+ VIDEO_ID +'/comments?' +
-            'alt=json&max-results=50&orderby=published';
-  getNewComments(url, 0);
+  NEXT_URL = 'https://gdata.youtube.com/feeds/api/videos/'+ VIDEO_ID +
+             '/comments?alt=json&max-results=50&orderby=published';
 
+  //function getNewComments(nextHandler, total_length, spam_length, ham_length)
+  getNewComments(sendToClassifier, 500, 40, 60);
+
+  /* EVENTS */
   $('#comments').on('click', '.comment_tag', function() {
     var $this = $(this);
     if (!$this.attr('disabled')) {
@@ -296,7 +313,7 @@ $(document).ready(function(){
 
       if (NEXT_URL != null) {
         lockMoreCommentsButton();
-        getNewComments(NEXT_URL, 0);
+        getNewComments(sendToClassifier, 500, 40, 60);
       } else {
         sendToClassifier();
       }
@@ -306,20 +323,59 @@ $(document).ready(function(){
   });
 
   $('#export-form').submit(function() {
-    $('#export-comments').empty();
-    var exportOption = $('input[name=export-option]:checked', '#export-form').val();
 
+    if ($('#export-button').attr('disabled')) {
+      return false;
+    }
+
+    $('#export-comments').empty();
+
+    /* Export options:
+     * t  => tagged only
+     * tu => tagged and untagged
+     * tc => tagged and classified
+     */
+    var exportOption = $('input[name=export-option]:checked', '#export-form').val();
     if (exportOption !== 't') {
 
       var $exportComments = $('#export-comments');
-      $('#comments').children('.comment[tagType=automatic]').each(function() {
+      var $commentsChildrenAutomatic = $('#comments').children('.comment[tagType=automatic]');
+      var newComment;
+      var total_length = 1000;
+      var spam_length = 1000;
+      var ham_length = 1000;
 
-        var newComment = {comment_id: $(this).attr('comment_id'),
-                          content: $(this).find('.comment_content').html()};
+      /* If there is not enough untagged comments, fetching new comments */
+      if (($commentsChildrenAutomatic.length + SUSPICIOUS_SPAM.length + SUSPICIOUS_HAM.length < total_length) &&
+          (NEXT_URL != null)) {
+        getNewComments(exportComments, total_length, spam_length, ham_length);
+        return false;
+      }
+
+      /* Handling comments already displayed */
+      $commentsChildrenAutomatic.each(function() {
+
+        newComment = {comment_id: $(this).attr('comment_id'),
+                      content: $(this).find('.comment_content').html()};
 
         newComment = JSON.stringify(newComment).replace(/"/g, '&quot;');
-        $exportComments.append('<input type="hidden" name="comments" value="'+newComment+'">')
+        $exportComments.append('<input type="hidden" name="comments" value="'+newComment+'">');
       });
+
+      /* Handling hidden comments */
+      var len = SUSPICIOUS_SPAM.length < spam_length ? SUSPICIOUS_SPAM.length : spam_length;
+      for (var i = 0; i < len; i++) {
+        newComment = SUSPICIOUS_SPAM[i];
+        newComment = JSON.stringify(newComment).replace(/"/g, '&quot;');
+        $exportComments.append('<input type="hidden" name="comments" value="'+newComment+'">');
+      }
+
+      len = SUSPICIOUS_HAM.length < ham_length ? SUSPICIOUS_HAM.length : ham_length;
+      for (var i = 0; i < len; i++) {
+        newComment = SUSPICIOUS_HAM[i];
+        newComment = JSON.stringify(newComment).replace(/"/g, '&quot;');
+        $exportComments.append('<input type="hidden" name="comments" value="'+newComment+'">');
+      }
     }
 
   });
