@@ -201,7 +201,6 @@ function saveComment(saveButton) {
     dataType: 'text'
   }).done(function(success) {
     var sibling = saveButton.siblings();
-    saveButton.attr('disabled', true);
 
     if (tag == 'spam') {
       incrementCounter($spamCount);
@@ -224,7 +223,9 @@ function saveComment(saveButton) {
       sibling.removeClass('alert');
     }
 
+    saveButton.attr('disabled', true);
     sibling.removeAttr('disabled');
+    $root.attr('tagType', 'manual');
 
     if (parseInt($spamCount.attr('value')) >= 10 && parseInt($hamCount.attr('value')) >= 10) {
       $('#classify-button').removeAttr('disabled');

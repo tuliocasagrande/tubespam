@@ -1,6 +1,7 @@
 #content {
   /*min-height: 270px;*/
-  min-height: 350px;
+  /*min-height: 350px;*/
+  min-height: 500px;
 }
 
 #summary > div {

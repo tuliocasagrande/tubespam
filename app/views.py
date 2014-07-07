@@ -144,6 +144,11 @@ def export(request):
   comments = Comment.objects.filter(video_id=video_id)
   untagged_comments = prepareNewComments(request.POST.getlist('comments'))
 
+  # Export options:
+  # t  => tagged only
+  # tu => tagged and untagged
+  # tc => tagged and classified
+
   csv = 'COMMENT_ID,CONTENT,TAG\n'
   for each in comments:
     content = each.getEscapedContentCsv()
@@ -156,11 +161,10 @@ def export(request):
       csv += '{0},"{1}",-1\n'.format(each.id, content)
 
   elif exportOption == 'tc':
-    # TODO, FIX IT!!!
-    # Classify and put proper tag (0, 1)
-    for each in untagged_comments:
-      content = each.getEscapedContentCsv()
-      csv += '{0},"{1}",-1\n'.format(each.id, content)
+    pred = classification.predict(video_id, untagged_comments)
+    for i in range(len(untagged_comments)):
+      content = untagged_comments[i].getEscapedContentCsv()
+      csv += '{0},"{1}",{2}\n'.format(untagged_comments[i].id, content, pred[i])
 
   response = HttpResponse(csv, content_type='text/plain')
   response['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(video_id)

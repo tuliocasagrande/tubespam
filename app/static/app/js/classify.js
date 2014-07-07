@@ -249,7 +249,6 @@ function saveComment(saveButton) {
     dataType: 'text'
   }).done(function(success) {
     var sibling = saveButton.siblings();
-    saveButton.attr('disabled', true);
 
     if (tag == 'spam') {
       incrementCounter($spamCount);
@@ -272,7 +271,9 @@ function saveComment(saveButton) {
       sibling.removeClass('alert');
     }
 
+    saveButton.attr('disabled', true);
     sibling.removeAttr('disabled');
+    $root.attr('tagType', 'manual');
     console.log(success);
   });
 }
