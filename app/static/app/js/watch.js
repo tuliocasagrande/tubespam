@@ -11,7 +11,7 @@ var TAG = '<div class="small-3 columns">' +
           '</div>';
 
 var $moreComments = $('#moreComments');
-var $taggedCount = $('#taggedCount');
+var $classifiedCount = $('#classifiedCount');
 var $spamCount = $('#spamCount');
 var $hamCount = $('#hamCount');
 
@@ -169,7 +169,7 @@ function appendToHtml(list, count) {
   for (var i = 0; i < len; i++) {
     newComment = list.shift();
     $('#comments').append(formattedComment(
-      newComment.comment_id, newComment.content, TAG, 'untagged'));
+      newComment.comment_id, newComment.content, TAG, 'unclassified'));
   }
 }
 
@@ -207,7 +207,7 @@ function saveComment(saveButton) {
       if ($root.attr('tagType') == 'manual') {
         decrementCounter($hamCount);
       } else {
-        incrementCounter($taggedCount);
+        incrementCounter($classifiedCount);
       }
       saveButton.addClass('alert');
       sibling.removeClass('success');
@@ -217,7 +217,7 @@ function saveComment(saveButton) {
       if ($root.attr('tagType') == 'manual') {
         decrementCounter($spamCount);
       } else {
-        incrementCounter($taggedCount);
+        incrementCounter($classifiedCount);
       }
       saveButton.addClass('success');
       sibling.removeClass('alert');

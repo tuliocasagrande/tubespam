@@ -22,7 +22,7 @@ var HAM_TAG = '<div class="small-3 columns">' +
           '</div>';
 
 var $moreComments = $('#moreComments');
-var $taggedCount = $('#taggedCount');
+var $classifiedCount = $('#classifiedCount');
 var $spamCount = $('#spamCount');
 var $hamCount = $('#hamCount');
 
@@ -255,7 +255,7 @@ function saveComment(saveButton) {
       if ($root.attr('tagType') == 'manual') {
         decrementCounter($hamCount);
       } else {
-        incrementCounter($taggedCount);
+        incrementCounter($classifiedCount);
       }
       saveButton.addClass('alert');
       sibling.removeClass('success');
@@ -265,7 +265,7 @@ function saveComment(saveButton) {
       if ($root.attr('tagType') == 'manual') {
         decrementCounter($spamCount);
       } else {
-        incrementCounter($taggedCount);
+        incrementCounter($classifiedCount);
       }
       saveButton.addClass('success');
       sibling.removeClass('alert');
@@ -332,12 +332,12 @@ $(document).ready(function(){
     $('#export-comments').empty();
 
     /* Export options:
-     * t  => tagged only
-     * tu => tagged and untagged
-     * tc => tagged and classified
+     * m  => manually classified only
+     * mu => manually classified and unclassified
+     * ma => manually and automatically classified
      */
     var exportOption = $('input[name=export-option]:checked', '#export-form').val();
-    if (exportOption !== 't') {
+    if (exportOption !== 'm') {
 
       var $exportComments = $('#export-comments');
       var $commentsChildrenAutomatic = $('#comments').children('.comment[tagType=automatic]');
@@ -346,7 +346,7 @@ $(document).ready(function(){
       var spam_length = 1000;
       var ham_length = 1000;
 
-      /* If there is not enough untagged comments, fetching new comments */
+      /* If there is not enough unclassified comments, fetching new comments */
       if (($commentsChildrenAutomatic.length + SUSPICIOUS_SPAM.length + SUSPICIOUS_HAM.length < total_length) &&
           (NEXT_URL != null)) {
         getNewComments(exportComments, total_length, spam_length, ham_length);

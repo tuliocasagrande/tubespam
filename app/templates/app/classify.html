@@ -17,7 +17,7 @@
       {% csrf_token %}
 
     {% if len_error %}
-      <p>At least 10 tagged spam and 10 tagged ham are needed!</p>
+      <p>At least 10 classified spam and 10 classified ham are needed!</p>
 
     {% else %}
       <div id="comments">
@@ -62,17 +62,17 @@
         </div>
 
         <div>
-          <strong># tagged comments:</strong>
-          <span id="taggedCount" value="{{ comments | length }}">{{ comments | length | intcomma }}</span>
+          <strong># classified comments:</strong>
+          <span id="classifiedCount" value="{{ comments | length }}">{{ comments | length | intcomma }}</span>
         </div>
 
         <div>
-          <strong># tagged spam:</strong>
+          <strong># classified spam:</strong>
           <span id="spamCount" value="{{ spam_count }}">{{ spam_count | intcomma }}</span>
         </div>
 
         <div>
-          <strong># tagged ham:</strong>
+          <strong># classified ham:</strong>
           <span id="hamCount" value="{{ ham_count }}">{{ ham_count | intcomma }}</span>
         </div>
       {% if not len_error %}
@@ -94,17 +94,29 @@
             <input type="hidden" name="v" value="{{ video_id }}">
             <div id="export-comments"></div>
 
-            <div>
-              <input type="radio" name="export-option" value="t" id="t-radio" checked>
-              <label for="t-radio">Tagged only</label>
+            <div class="row">
+              <div class="small-1 large-2 columns">
+                <input type="radio" name="export-option" value="m" id="m-radio" checked>
+              </div>
+              <div class="small-11 large-10 columns label-export">
+                <label for="m-radio">Manually classified only</label>
+              </div>
             </div>
-            <div>
-              <input type="radio" name="export-option" value="tu" id="tu-radio">
-              <label for="tu-radio">Tagged and untagged</label>
+            <div class="row">
+              <div class="small-1 large-2 columns">
+                <input type="radio" name="export-option" value="mu" id="mu-radio">
+              </div>
+              <div class="small-11 large-10 columns label-export">
+                <label for="mu-radio">Manually classified and unclassified</label>
+              </div>
             </div>
-            <div>
-              <input type="radio" name="export-option" value="tc" id="tc-radio">
-              <label for="tc-radio">Tagged and classified</label>
+            <div class="row">
+              <div class="small-1 large-2 columns">
+                <input type="radio" name="export-option" value="ma" id="ma-radio">
+              </div>
+              <div class="small-11 large-10 columns label-export">
+                <label for="ma-radio">Manually and automatically classified</label>
+              </div>
             </div>
             <input type="submit" id="export-button" class="button tiny right" value="Export CSV">
           </fieldset>
