@@ -25,10 +25,18 @@
 
 .loading-icon {
   background: white url("../img/loading.gif") no-repeat right bottom;
-  width: 32px;
-  height: 32px;
+  /*width: 32px;*/
+  /*height: 32px;*/
 }
 
 .label-export {
   padding-left: 0px;
+}
+
+.fi-refresh {
+   font-size: 130%;
+}
+
+.disabled {
+  color: #888 !important;
 }

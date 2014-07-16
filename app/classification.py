@@ -5,7 +5,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.grid_search import GridSearchCV
 from sklearn.svm import LinearSVC
 from sklearn.svm import SVC
-from sklearn import cross_validation
+from sklearn import naive_bayes, cross_validation
 from sklearn.semi_supervised import LabelSpreading
 #from sklearn import metrics
 #from sklearn.metrics import classification_report
@@ -52,6 +52,7 @@ def train(video_id, comments, untaggedComments):
     y = numpy.concatenate([numpy.asarray(classes), semiSupervised_y])
 
   # Fiting the classifier with real and predicted classes
+  # clf, scores = naiveBayes(X, y) # Multinomial NaiveBayes
   clf, scores = svmLinear(X, y) # LinearSVM
   # clf, scores = svm(X, y)     # SVM
 
@@ -79,6 +80,11 @@ def predict(video_id, untaggedComments):
   p = clf.predict(X)
 
   return p
+
+def naiveBayes(X, y):
+  clf = naive_bayes.MultinomialNB(alpha=.01)
+  scores = cross_validation.cross_val_score(clf, X, y, cv=10)
+  return clf, scores
 
 def svmLinear(X, y):
   range5 = list((10.0**i) for i in range(-5,5))

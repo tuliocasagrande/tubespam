@@ -1,0 +1,49 @@
+        {% load humanize %}
+        <div id="export-modal" class="reveal-modal large" data-reveal>
+          <h2>Export Comments</h2>
+          <a class="close-reveal-modal">&#215;</a>
+
+          <form id="export-form" action='/export' method="post">{% csrf_token %}
+            <input type="hidden" name="v" value="{{ video_id }}">
+            <div id="export-comments"></div>
+
+            <p>1- Choose which comments will be exported:</p>
+            <div class="row">
+              <div class="large-12 columns">
+                <label for="m-radio">
+                  <input type="radio" name="export-option" value="m" id="m-radio" checked>
+                  Manually classified only <i class="fi-info" data-tooltip class="has-tip" title="Only comments classified by the user."></i>
+                </label>
+                <label for="mu-radio">
+                  <input type="radio" name="export-option" value="mu" id="mu-radio">
+                  Classified and unclassified
+                </label>
+              </div>
+            </div>
+            <hr/>
+            <div class="disabled ext-options-text">
+              <p>2- Choose what to do with unclassified comments:</p>
+              <div class="row">
+                <div class="large-12 columns">
+                  <label for="ec-radio" class="disabled ext-options-text">
+                    <input type="radio" name="export-ext-option" value="ec" id="ec-radio" class="ext-options" disabled checked>
+                    Apply the trained classifier
+                  </label>
+                  <label for="ek-radio" class="disabled ext-options-text">
+                    <input type="radio" name="export-ext-option" value="ek" id="ek-radio" class="ext-options" disabled>
+                    Keep them unclassified <i class="fi-info" data-tooltip class="has-tip" title="The class will be -1."></i>
+                  </label>
+                </div>
+              </div>
+              <hr/>
+              <p>3- Choose the amount of unclassified comments to export:</p>
+              <div class="row">
+                <div class="large-3 columns">
+                  <input type="number" value="1000" id="export-amout" class="ext-options" disabled />
+                </div>
+              </div>
+            </div>
+
+            <input type="submit" id="export-button" class="button tiny secondary right" value="Export CSV">
+          </form>
+        </div>

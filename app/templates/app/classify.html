@@ -4,6 +4,7 @@
 
 {% block content %}
     {% load humanize %}
+    {% load get_class_name %}
     <!-- Main Content -->
     <div class="large-8 columns" role="content">
       <article>
@@ -22,7 +23,7 @@
     {% else %}
       <div id="comments">
 
-        {% include "app/taggedComments.html" %}
+        {% include "app/classifiedComments.html" %}
         <h3>Prediction</h3>
         <hr/>
 
@@ -52,86 +53,37 @@
     <aside class="large-4 columns">
       <div id="summary" class="panel">
         <h4>Summary</h4>
-        <div>
-          <strong># views:</strong> <span id="viewCount">0</span>
-        </div>
-
-        <div>
-          <strong># comments:</strong> <span id="commentCount">0</span>
-          <small>The actual count of comments may differ because, since November 2013, shares on Google+ are counted as comments.</small>
-        </div>
-
-        <div>
-          <strong># classified comments:</strong>
-          <span id="classifiedCount" value="{{ comments | length }}">{{ comments | length | intcomma }}</span>
-        </div>
-
-        <div>
-          <strong># classified spam:</strong>
-          <span id="spamCount" value="{{ spam_count }}">{{ spam_count | intcomma }}</span>
-        </div>
-
-        <div>
-          <strong># classified ham:</strong>
-          <span id="hamCount" value="{{ ham_count }}">{{ ham_count | intcomma }}</span>
-        </div>
-      {% if not len_error %}
+        {% include "app/commonSummary.html" %}
+        {% if not len_error %}
+        <hr/>
         <div>
           <strong>Classifier:</strong>
-          LinearSVC (c: {{ clf.get_params.C|floatformat:-5 }})
+          {{ clf | get_class_name }} (c: {{ clf.get_params.C|floatformat:-5 }})
         </div>
-
         <div>
           <strong>Accuracy:</strong>
           {{ acc|floatformat:2 }}% &#177; {{ stddev|floatformat:2 }}
         </div>
-      {% endif %}
+        <hr/>
+        {% endif %}
         <a href="watch?v={{ video_id }}" class="button expand tiny">Back to video</a>
-
-        <form id="export-form" action='/export' method="post">{% csrf_token %}
-          <fieldset>
-            <legend>Export Comments</legend>
-            <input type="hidden" name="v" value="{{ video_id }}">
-            <div id="export-comments"></div>
-
-            <div class="row">
-              <div class="small-1 large-2 columns">
-                <input type="radio" name="export-option" value="m" id="m-radio" checked>
-              </div>
-              <div class="small-11 large-10 columns label-export">
-                <label for="m-radio">Manually classified only</label>
-              </div>
-            </div>
-            <div class="row">
-              <div class="small-1 large-2 columns">
-                <input type="radio" name="export-option" value="mu" id="mu-radio">
-              </div>
-              <div class="small-11 large-10 columns label-export">
-                <label for="mu-radio">Manually classified and unclassified</label>
-              </div>
-            </div>
-            <div class="row">
-              <div class="small-1 large-2 columns">
-                <input type="radio" name="export-option" value="ma" id="ma-radio">
-              </div>
-              <div class="small-11 large-10 columns label-export">
-                <label for="ma-radio">Manually and automatically classified</label>
-              </div>
-            </div>
-            <input type="submit" id="export-button" class="button tiny right" value="Export CSV">
-          </fieldset>
-        </form>
+        <a href="#" id="export-modal-button" data-reveal-id="export-modal" class="button expand secondary tiny" disabled>Export comments <i class="fi-arrow-down"></i></a>
       </div>
 
     </aside>
     <!-- End Sidebar -->
+    {% include "app/exportModal.html" %}
 {% endblock %}
 
 {% block js %}
   <!-- JS (Placed at the end of the document so the pages load faster) -->
   {% load staticfiles %}
   <script src="{% static 'app/js/vendor/jquery.js' %}"></script>
+  <script src="{% static 'app/js/vendor/fastclick.js' %}"></script>
   <script src="{% static 'app/js/vendor/jquery.cookie.js' %}"></script>
   <script src="{% static 'app/js/foundation.min.js' %}"></script>
   <script src="{% static 'app/js/classify.js' %}" type="text/javascript"></script>
+  <script>
+    $(document).foundation();
+  </script>
 {% endblock %}

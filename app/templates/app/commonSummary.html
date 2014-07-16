@@ -1,0 +1,24 @@
+        {% load humanize %}
+        <div>
+          <strong># views:</strong> <span id="viewCount">0</span>
+        </div>
+
+        <div>
+          <strong># comments:</strong>
+          <span id="commentCount">0</span> <i class="fi-info" data-tooltip class="has-tip" title="The actual count of comments may differ because, since November 2013, shares on Google+ are counted as comments."></i>
+        </div>
+
+        <div>
+          <strong># classified comments:</strong>
+          <span class="classifiedCount" value="{{ comments | length }}">{{ comments | length | intcomma }}</span>
+        </div>
+
+        <div>
+          <strong># classified spam:</strong>
+          <span id="spamCount" value="{{ spam_count }}">{{ spam_count | intcomma }}</span>
+        </div>
+
+        <div>
+          <strong># classified ham:</strong>
+          <span id="hamCount" value="{{ ham_count }}">{{ ham_count | intcomma }}</span>
+        </div>

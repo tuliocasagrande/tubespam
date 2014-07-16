@@ -22,19 +22,17 @@ var HAM_TAG = '<div class="small-3 columns">' +
           '</div>';
 
 var $moreComments = $('#moreComments');
-var $classifiedCount = $('#classifiedCount');
+var $classifiedCount = $('.classifiedCount');
 var $spamCount = $('#spamCount');
 var $hamCount = $('#hamCount');
 
-function lockMoreCommentsButton() {
-  $moreComments.html('Loading ...');
-  $moreComments.addClass('loading-icon');
-  $moreComments.attr('disabled', true);
+function lockLoadingButton($loadingButton) {
+  $loadingButton.addClass('loading-icon');
+  $loadingButton.attr('disabled', true);
 }
-function unlockMoreCommentsButton() {
-  $moreComments.html('Show more comments <i class="fi-refresh"></i>');
-  $moreComments.removeClass('loading-icon');
-  $moreComments.removeAttr('disabled');
+function unlockLoadingButton($loadingButton) {
+  $loadingButton.removeClass('loading-icon');
+  $loadingButton.removeAttr('disabled');
 }
 
 function incrementCounter($counter) {
@@ -193,7 +191,9 @@ function sendToClassifier() {
       NEXT_URL == null) {
       $moreComments.remove();
     } else {
-      unlockMoreCommentsButton();
+      $moreComments.html('Show more comments <i class="fi-refresh"></i>');
+      unlockLoadingButton($moreComments);
+      $('#export-modal-button').removeAttr('disabled');
     }
   }).fail(function(data) {
     $moreComments.remove();
@@ -279,6 +279,7 @@ function saveComment(saveButton) {
 }
 
 function exportComments() {
+  $('#export-button').removeAttr('disabled');
   $('#export-form').submit();
 }
 
@@ -309,11 +310,13 @@ $(document).ready(function(){
   });
 
   $('#moreComments').click(function() {
-    if (!$(this).attr('disabled')) {
+    var $this = $(this);
+    if (!$this.attr('disabled')) {
       console.log('More comments...');
 
       if (NEXT_URL != null) {
-        lockMoreCommentsButton();
+        $this.html('Loading ...');
+        lockLoadingButton($this);
         getNewComments(sendToClassifier, 500, 40, 60);
       } else {
         sendToClassifier();
@@ -323,11 +326,24 @@ $(document).ready(function(){
     return false;
   });
 
-  $('#export-form').submit(function() {
+  $('input[name=export-option]').change(function() {
+    var exportOption = $('input[name=export-option]:checked', '#export-form').val();
+    if (exportOption === 'm') {
+      $('.ext-options-text').addClass('disabled');
+      $('.ext-options').attr('disabled', true);
+    } else {
+      $('.ext-options-text').removeClass('disabled');
+      $('.ext-options').removeAttr('disabled');
+    }
+  });
 
-    if ($('#export-button').attr('disabled')) {
+  $('#export-form').submit(function() {
+    $exportButton = $('#export-button');
+    if ($exportButton.attr('disabled')) {
       return false;
     }
+
+    lockLoadingButton($exportButton);
 
     $('#export-comments').empty();
 
@@ -339,17 +355,19 @@ $(document).ready(function(){
     var exportOption = $('input[name=export-option]:checked', '#export-form').val();
     if (exportOption !== 'm') {
 
+      var exportAmount = $('#export-amout').val();
+      if (exportAmount <= 0) exportAmount = 0;
+
       var $exportComments = $('#export-comments');
       var $commentsChildrenAutomatic = $('#comments').children('.comment[tagType=automatic]');
       var newComment;
-      var total_length = 1000;
-      var spam_length = 1000;
-      var ham_length = 1000;
+      var spam_length, ham_length;
+      spam_length = ham_length = exportAmount;
 
       /* If there is not enough unclassified comments, fetching new comments */
-      if (($commentsChildrenAutomatic.length + SUSPICIOUS_SPAM.length + SUSPICIOUS_HAM.length < total_length) &&
+      if (($commentsChildrenAutomatic.length + SUSPICIOUS_SPAM.length + SUSPICIOUS_HAM.length < exportAmount) &&
           (NEXT_URL != null)) {
-        getNewComments(exportComments, total_length, spam_length, ham_length);
+        getNewComments(exportComments, exportAmount, spam_length, ham_length);
         return false;
       }
 
@@ -378,7 +396,8 @@ $(document).ready(function(){
         $exportComments.append('<input type="hidden" name="comments" value="'+newComment+'">');
       }
     }
-
+    unlockLoadingButton($exportButton);
+    $('#export-modal').foundation('reveal', 'close');
   });
 
 });

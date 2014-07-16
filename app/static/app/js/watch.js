@@ -11,7 +11,7 @@ var TAG = '<div class="small-3 columns">' +
           '</div>';
 
 var $moreComments = $('#moreComments');
-var $classifiedCount = $('#classifiedCount');
+var $classifiedCount = $('.classifiedCount');
 var $spamCount = $('#spamCount');
 var $hamCount = $('#hamCount');
 
@@ -108,6 +108,7 @@ function getNewComments(url, call) {
     $moreComments.remove();
   }).done(function(data){
     loadNewComments(data);
+    console.log(SUSPICIOUS_SPAM.length + SUSPICIOUS_HAM.length);
 
     if (data.feed.link[data.feed.link.length-1].rel == 'next') {
       NEXT_URL = data.feed.link[data.feed.link.length-1].href;
