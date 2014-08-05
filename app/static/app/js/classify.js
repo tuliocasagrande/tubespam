@@ -176,14 +176,17 @@ function sendToClassifier() {
     data: { v: VIDEO_ID, 'comments[]': comments },
     dataType: 'json'
   }).done(function(data) {
+    console.log(data);
+    var new_clf = data['new_clf'];
+    comments = data['comments'];
 
-    for (var key in data) {
-      if (data[key].tag === "1") {
+    for (var key in comments) {
+      if (comments[key].tag === "1") {
         $('#comments').append(formattedComment(key,
-          data[key].content, SPAM_TAG, 'automatic'));
+          comments[key].content, SPAM_TAG, 'automatic'));
       } else {
         $('#comments').append(formattedComment(key,
-          data[key].content, HAM_TAG, 'automatic'));
+          comments[key].content, HAM_TAG, 'automatic'));
       }
     }
 
@@ -195,10 +198,26 @@ function sendToClassifier() {
       unlockLoadingButton($moreComments);
       $('#export-modal-button').removeAttr('disabled');
     }
+
+    if (new_clf === "1") {
+      reloadClassifierInfo();
+    }
+
   }).fail(function(data) {
     $moreComments.remove();
     console.log('ERROR JSON!!!');
     console.log(data.responseText);
+  });
+}
+
+function reloadClassifierInfo() {
+  $.ajax({
+    type: 'GET',
+    url: '/reloadClfInfo',
+    data: { v: VIDEO_ID },
+    dataType: 'html'
+  }).done(function(data) {
+    $('#clf-info').html(data);
   });
 }
 

@@ -54,17 +54,22 @@
       <div id="summary" class="panel">
         <h4>Summary</h4>
         {% include "app/commonSummary.html" %}
+
         {% if not len_error %}
-        <hr/>
-        <div>
-          <strong>Classifier:</strong>
-          {{ clf | get_class_name }} (c: {{ clf.get_params.C|floatformat:-5 }})
-        </div>
-        <div>
-          <strong>Accuracy:</strong>
-          {{ acc|floatformat:2 }}% &#177; {{ stddev|floatformat:2 }}
-        </div>
-        <hr/>
+          <div id="clf-info">
+          {% if clf %}
+            <hr/>
+            <div>
+              <strong>Classifier:</strong>
+              {{ clf | get_class_name }} (c: {{ clf.get_params.C|floatformat:-5 }})
+            </div>
+            <div>
+              <strong>Accuracy:</strong>
+              {{ acc|floatformat:2 }}% &#177; {{ stddev|floatformat:2 }}
+            </div>
+            <hr/>
+          {% endif %}
+          </div>
         {% endif %}
         <a href="watch?v={{ video_id }}" class="button expand tiny">Back to video</a>
         <a href="#" id="export-modal-button" data-reveal-id="export-modal" class="button expand secondary tiny" disabled>Export comments <i class="fi-arrow-down"></i></a>
