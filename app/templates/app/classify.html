@@ -18,15 +18,15 @@
       {% csrf_token %}
 
     {% if len_error %}
-      <p>At least 10 classified spam and 10 classified ham are needed!</p>
+      <p>At least 10 labeled spam and 10 labeled ham are needed!</p>
 
     {% else %}
-      <div id="comments">
-
+      <h3>Labeled Comments</h3>
+      <div id="classified_comments" class="panel callout radius">
         {% include "app/classifiedComments.html" %}
-        <h3>Prediction</h3>
-        <hr/>
-
+      </div>
+      <div id="comments">
+        <h3>Prediction</h3><hr/>
       {% for c, p in prediction %}
         <div class="comment row" tagType="automatic" comment_id="{{ c }}">
           <p class="content small-9 columns">{{ c }}</p>

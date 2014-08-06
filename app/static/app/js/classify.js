@@ -6,17 +6,17 @@ var SUSPICIOUS_HAM = [];
 var NEXT_URL;
 
 var BUTTON = 'comment_tag right tiny secondary button';
-var TAG = '<div class="small-3 columns">' +
+var TAG = '<div class="tag_column small-3 columns">' +
           '<span class="'+ BUTTON +' spam" tag="spam">Spam</span>' +
           '<span class="'+ BUTTON +' ham" tag="ham">Ham</span>' +
           '</div>';
 
-var SPAM_TAG = '<div class="small-3 columns">' +
+var SPAM_TAG = '<div class="tag_column small-3 columns">' +
           '<span class="'+ BUTTON +' alert spam" disabled tag="spam">Spam</span>' +
           '<span class="'+ BUTTON +' ham" tag="ham">Ham</span>' +
           '</div>';
 
-var HAM_TAG = '<div class="small-3 columns">' +
+var HAM_TAG = '<div class="tag_column small-3 columns">' +
           '<span class="'+ BUTTON +' spam" tag="spam">Spam</span>' +
           '<span class="'+ BUTTON +' success ham" disabled tag="ham">Ham</span>' +
           '</div>';
@@ -202,6 +202,49 @@ function sendToClassifier() {
   });
 }
 
+function retrainClassifier() {
+  var $comments = $('#comments');
+  var $classifiedComments = $('#classified_comments');
+
+  var $commentsChildrenManual = $comments.children('.comment[tagType=manual]');
+  $commentsChildrenManual.each(function() {
+    $classifiedComments.append('<hr/>')
+    $(this).appendTo($classifiedComments);
+  });
+
+  var newList = [];
+  var $commentsChildrenAutomatic = $comments.children('.comment[tagType=automatic]');
+  $commentsChildrenAutomatic.each(function() {
+    newComment = {comment_id: $(this).attr('comment_id'),
+                  content: $(this).find('.comment_content').html()};
+    $(this).remove();
+    newList.push(JSON.stringify(newComment));
+  });
+
+  $comments.html('<h3>Prediction</h3><hr/>');
+
+  $.ajax({
+    type: 'POST',
+    url: '/train',
+    headers: {'X-CSRFToken': CSRFTOKEN},
+    data: { v: VIDEO_ID, 'comments[]': newList },
+    dataType: 'json'
+  }).done(function(data) {
+
+    for (var key in data) {
+      if (data[key].tag === "1") {
+        $('#comments').append(formattedComment(key,
+          data[key].content, SPAM_TAG, 'automatic'));
+      } else {
+        $('#comments').append(formattedComment(key,
+          data[key].content, HAM_TAG, 'automatic'));
+      }
+    }
+
+    reloadClassifierInfo();
+  });
+}
+
 function reloadClassifierInfo() {
   $.ajax({
     type: 'GET',
@@ -290,7 +333,7 @@ function saveComment(saveButton) {
     if (num_untrd_comments >= 5) {
       refit = confirm(num_untrd_comments +' comments were manually fixed since the last training. Retrain the classifier?')
       if (refit) {
-        reloadClassifierInfo();
+        retrainClassifier();
       }
     }
   });
@@ -306,7 +349,7 @@ $(document).ready(function(){
   CSRFTOKEN = $.cookie('csrftoken');
   VIDEO_ID = $('#video_title').attr('video_id');
 
-  $('#comments').children('.comment[tagType=manual]').each(function() {
+  $('#classified_comments').children('.comment[tagType=manual]').each(function() {
     TAGGED_COMMENTS[$(this).attr('comment_id')] = $(this).attr('comment_id');
   });
 
@@ -319,7 +362,7 @@ $(document).ready(function(){
   getNewComments(sendToClassifier, 500, 40, 60);
 
   /* EVENTS */
-  $('#comments').on('click', '.comment_tag', function() {
+  $('#comments, #classified_comments').on('click', '.comment_tag', function() {
     var $this = $(this);
     if (!$this.attr('disabled')) {
       saveComment($this);

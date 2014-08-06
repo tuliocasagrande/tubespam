@@ -19,7 +19,11 @@
  margin-bottom: 0px;
 }
 
-#comments {
+.tag_column {
+  padding-left: 0;
+}
+
+#comments, #classified_comments {
   word-wrap: break-word;
 }
 
