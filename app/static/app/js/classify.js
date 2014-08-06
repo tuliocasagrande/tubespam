@@ -176,17 +176,14 @@ function sendToClassifier() {
     data: { v: VIDEO_ID, 'comments[]': comments },
     dataType: 'json'
   }).done(function(data) {
-    console.log(data);
-    var new_clf = data['new_clf'];
-    comments = data['comments'];
 
-    for (var key in comments) {
-      if (comments[key].tag === "1") {
+    for (var key in data) {
+      if (data[key].tag === "1") {
         $('#comments').append(formattedComment(key,
-          comments[key].content, SPAM_TAG, 'automatic'));
+          data[key].content, SPAM_TAG, 'automatic'));
       } else {
         $('#comments').append(formattedComment(key,
-          comments[key].content, HAM_TAG, 'automatic'));
+          data[key].content, HAM_TAG, 'automatic'));
       }
     }
 
@@ -198,11 +195,6 @@ function sendToClassifier() {
       unlockLoadingButton($moreComments);
       $('#export-modal-button').removeAttr('disabled');
     }
-
-    if (new_clf === "1") {
-      reloadClassifierInfo();
-    }
-
   }).fail(function(data) {
     $moreComments.remove();
     console.log('ERROR JSON!!!');
@@ -213,7 +205,7 @@ function sendToClassifier() {
 function reloadClassifierInfo() {
   $.ajax({
     type: 'GET',
-    url: '/reloadClfInfo',
+    url: '/reloadClassifierInfo',
     data: { v: VIDEO_ID },
     dataType: 'html'
   }).done(function(data) {
@@ -262,11 +254,11 @@ function saveComment(saveButton) {
     url: '/saveComment',
     headers: {'X-CSRFToken': CSRFTOKEN},
     data: {comment_id: comment_id,
-        video_id: VIDEO_ID,
-        content: content,
-        tag: tag },
+           video_id: VIDEO_ID,
+           content: content,
+           tag: tag },
     dataType: 'text'
-  }).done(function(success) {
+  }).done(function(num_untrd_comments) {
     var sibling = saveButton.siblings();
 
     if (tag == 'spam') {
@@ -293,7 +285,14 @@ function saveComment(saveButton) {
     saveButton.attr('disabled', true);
     sibling.removeAttr('disabled');
     $root.attr('tagType', 'manual');
-    console.log(success);
+
+    console.log(num_untrd_comments);
+    if (num_untrd_comments >= 5) {
+      refit = confirm(num_untrd_comments +' comments were manually fixed since the last training. Retrain the classifier?')
+      if (refit) {
+        reloadClassifierInfo();
+      }
+    }
   });
 }
 

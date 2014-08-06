@@ -15,5 +15,5 @@ urlpatterns = patterns('',
   url(r'^saveComment$', views.saveComment, name='saveComment'),
   url(r'^train$', views.train, name='train'),
   url(r'^export$', views.export, name='export'),
-  url(r'^reloadClfInfo$', views.reloadClfInfo, name='reloadClfInfo'),
+  url(r'^reloadClassifierInfo$', views.reloadClassifierInfo, name='reloadClassifierInfo'),
 )

@@ -51,7 +51,8 @@ def saveComment(request):
   video.num_untrd_comments += 1
   video.save()
   comment.save()
-  return HttpResponse('success!')
+  return HttpResponse(video.num_untrd_comments)
+
 
 def retrieveVideo(video_id):
   try:
@@ -116,11 +117,8 @@ def train(request):
       if video_id and untagged_comments and spam_count >= 10 and ham_count >= 10:
         if video.num_untrd_comments < 5 and clf != None:
           pred = classification.predict(video_id, untagged_comments)
-          output += '"new_clf":"0","comments":{'
 
         else:
-          output += '"new_clf":"1","comments":{'
-
           # FIX SEMI-SUPERVISED
           if spam_count + ham_count < 100:
             video.acc, video.stddev = classification.train(video_id, comments, untagged_comments)
@@ -134,11 +132,11 @@ def train(request):
         json = '"{0}":{{"content":"{1}","tag":"{2}"}}'
         output += ','.join([json.format(untagged_comments[i].id, untagged_comments[i].getEscapedContentJson(), pred[i])
                             for i in range(len(untagged_comments))])
-      output += '}}'
+      output += '}'
 
   return HttpResponse(output)
 
-def reloadClfInfo(request):
+def reloadClassifierInfo(request):
   output = ''
 
   video_id = request.GET['v']

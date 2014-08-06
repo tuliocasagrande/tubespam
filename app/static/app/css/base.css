@@ -41,14 +41,6 @@
   color: #888 !important;
 }
 
-.display-none {
-  display: none;
-}
-
-.green {
-  background-color: #AAA;
-}
-
 /* www.justinaguilar.com/animations/ */
 .pulse{
   animation-name: pulse;
