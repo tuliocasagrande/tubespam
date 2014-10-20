@@ -91,6 +91,7 @@ function getVideoMeta(video_id) {
       var commentCount = data.entry.gd$comments.gd$feedLink.countHint;
       $('#commentCount').html(formattedNumber(commentCount));
     } catch(e) {
+      console.log(e);
       $('#comments').append("Comments are disabled for this video.");
       $moreComments.remove();
     }
@@ -110,8 +111,9 @@ function getNewComments(url, call) {
     loadNewComments(data);
     console.log(SUSPICIOUS_SPAM.length + SUSPICIOUS_HAM.length);
 
-    if (data.feed.link[data.feed.link.length-1].rel == 'next') {
-      NEXT_URL = data.feed.link[data.feed.link.length-1].href;
+    var last_link = data.feed.link.length - 1;
+    if (data.feed.link[last_link].rel == 'next') {
+      NEXT_URL = data.feed.link[last_link].href;
     } else {
       NEXT_URL = null;
       putNewComments();
@@ -129,9 +131,17 @@ function getNewComments(url, call) {
 
 
 function loadNewComments(data) {
-  var comment_id, start_index, content, newComment;
+  var len, comment_id, start_index, content, newComment;
 
-  for (var i = 0, len = data.feed.entry.length; i < len; i++) {
+  try {
+    len = data.feed.entry.length;
+  } catch(e) {
+    console.log(e);
+    len = 0;
+  }
+
+  for (var i = 0; i < len; i++) {
+
     start_index = data.feed.entry[i].id.$t.lastIndexOf('/') + 1;
     comment_id = data.feed.entry[i].id.$t.substring(start_index);
     content = data.feed.entry[i].content.$t;
