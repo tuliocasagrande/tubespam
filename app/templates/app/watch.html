@@ -16,11 +16,16 @@
         <div><small id="video_content"></small></div>
       </article>
 
-      <hr />
+      <hr/>
       {% csrf_token %}
+
       <div id="comments">
-        {% include "app/classifiedComments.html" %}
+      {% for c in comments %}
+        {% include "app/commentRow.html" %}
+        <hr/>
+      {% endfor %}
       </div>
+
       <a href id="moreComments" class="button expand secondary tiny loading-icon" disabled>Loading ...</a>
     </div>
     <!-- End Main Content -->

@@ -141,7 +141,6 @@ function loadNewComments(data) {
   }
 
   for (var i = 0; i < len; i++) {
-
     start_index = data.feed.entry[i].id.$t.lastIndexOf('/') + 1;
     comment_id = data.feed.entry[i].id.$t.substring(start_index);
     content = data.feed.entry[i].content.$t;

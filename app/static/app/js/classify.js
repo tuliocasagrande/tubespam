@@ -144,9 +144,16 @@ function getNewComments(nextHandler, total_length, spam_length, ham_length) {
 
 
 function loadNewComments(data) {
-  var comment_id, start_index, content, newComment;
+  var len, comment_id, start_index, content, newComment;
 
-  for (var i = 0, len = data.feed.entry.length; i < len; i++) {
+  try {
+    len = data.feed.entry.length;
+  } catch(e) {
+    console.log(e);
+    len = 0;
+  }
+
+  for (var i = 0; i < len; i++) {
     start_index = data.feed.entry[i].id.$t.lastIndexOf('/') + 1;
     comment_id = data.feed.entry[i].id.$t.substring(start_index);
     content = data.feed.entry[i].content.$t;

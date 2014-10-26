@@ -1,12 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
+from django.db.models import Count
 import json
 
 from app.models import Video, Comment
 import app.classification as classification
 
 def index(request):
-  return render(request, 'app/index.html', {'videos': Video.objects.all()})
+  #q = Video.objects.all()
+  q = Comment.objects.values('video_id').annotate(num_comments=Count('id')).order_by('-num_comments')
+  return render(request, 'app/index.html', {'videos': q})
 
 def about(request):
   return render(request, 'app/about.html')

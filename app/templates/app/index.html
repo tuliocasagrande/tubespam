@@ -7,7 +7,7 @@
     {% if videos %}
       <ul>
       {% for v in videos %}
-        <li><a href="/watch?v={{ v.id }}">{{ v.id }}</a></li>
+        <li><a href="/watch?v={{ v.video_id }}">{{ v.video_id }}</a> - {{ v.num_comments }}</li>
       {% endfor %}
       </ul>
     {% else %}

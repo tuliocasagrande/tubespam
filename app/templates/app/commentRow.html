@@ -1,4 +1,3 @@
-      {% for c in comments %}
         <div class="comment row" tagType="manual" comment_id="{{ c.id }}">
           <p class="comment_content small-9 columns">{{ c.content }}</p>
           <div class="tag_column small-3 columns">
@@ -11,7 +10,3 @@
           {% endif %}
           </div>
         </div>
-        {% if not forloop.last %}
-        <hr/>
-        {% endif %}
-      {% endfor %}

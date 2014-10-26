@@ -23,8 +23,14 @@
     {% else %}
       <h3>Labeled Comments</h3>
       <div id="classified_comments" class="panel callout radius">
-        {% include "app/classifiedComments.html" %}
+      {% for c in comments %}
+        {% include "app/commentRow.html" %}
+        {% if not forloop.last %}
+        <hr/>
+        {% endif %}
+      {% endfor %}
       </div>
+
       <div id="comments">
         <h3>Prediction</h3><hr/>
       {% for c, p in prediction %}
