@@ -37,10 +37,14 @@ function decrementCounter($counter) {
   $counter.html(formattedNumber(newValue));
 }
 
-function formattedComment(id, content, tag, tagType) {
+function formattedComment(comment_id, author, date, content, tag, tagType) {
   tagType = typeof tagType !== 'undefined' ? tagType : '';
 
-  var comment = '<div class="comment row" tagType="'+ tagType +'" comment_id="'+ id +'">' +
+  var comment = '<div class="comment row" tagType="'+ tagType +'" comment_id="'+ comment_id +'">' +
+                '<p class="comment_header small-12 columns">' +
+                '<strong class="comment_author">'+ author +'</strong>'+
+                '<a href="https://www.youtube.com/watch?v='+ VIDEO_ID +'&google_comment_id='+comment_id+'" target="_blank">' +
+                '<small class="comment_date">' + date.toUTCString() +'</small></a></p>' +
                 '<p class="comment_content small-9 columns">'+ content +'</p>' +
                 tag +'</div><hr/>';
 
@@ -51,7 +55,7 @@ function formattedDate(date) {
   var MONTH_NAMES = ["Jan ", "Feb ", "Mar ", "Apr ", "May ", "Jun ",
                      "Jul ", "Aug ", "Sep ", "Oct ", "Nov ", "Dec "];
 
-  return 'Uploaded on ' + MONTH_NAMES[date.getMonth()] + date.getDate() + ', ' + date.getFullYear();
+  return 'Published on ' + MONTH_NAMES[date.getMonth()] + date.getDate() + ', ' + date.getFullYear();
 }
 
 function formattedNumber(number, decimals, dec_point, thousands_sep) {
@@ -105,8 +109,12 @@ function getNewComments(url, call) {
     url: url,
     dataType: 'json'
   }).fail(function() {
-    $('#comments').append("Comments are disabled for this video.");
-    $moreComments.remove();
+    // $('#comments').append("Comments are disabled for this video.");
+    // $moreComments.remove();
+
+    console.log('Something went wrong. Trying again in few seconds.');
+    setTimeout(function(){ getNewComments(url, call) }, 3000);
+
   }).done(function(data){
     loadNewComments(data);
     console.log(SUSPICIOUS_SPAM.length + SUSPICIOUS_HAM.length);
@@ -131,7 +139,7 @@ function getNewComments(url, call) {
 
 
 function loadNewComments(data) {
-  var len, comment_id, start_index, content, newComment;
+  var len, start_index, comment_id, author, date, content, newComment;
 
   try {
     len = data.feed.entry.length;
@@ -143,6 +151,8 @@ function loadNewComments(data) {
   for (var i = 0; i < len; i++) {
     start_index = data.feed.entry[i].id.$t.lastIndexOf('/') + 1;
     comment_id = data.feed.entry[i].id.$t.substring(start_index);
+    author = data.feed.entry[i].author[0].name.$t;
+    date = new Date(data.feed.entry[i].published.$t);
     content = data.feed.entry[i].content.$t;
 
     if (TAGGED_COMMENTS.hasOwnProperty(comment_id)) {
@@ -151,7 +161,7 @@ function loadNewComments(data) {
       continue;
     }
 
-    newComment = {comment_id: comment_id, content: content};
+    newComment = {comment_id: comment_id, author: author, date: date, content: content};
     if (suspiciousComment(content)) {
       SUSPICIOUS_SPAM.push(newComment);
     } else {
@@ -179,7 +189,8 @@ function appendToHtml(list, count) {
   for (var i = 0; i < len; i++) {
     newComment = list.shift();
     $('#comments').append(formattedComment(
-      newComment.comment_id, newComment.content, TAG, 'unclassified'));
+      newComment.comment_id, newComment.author, newComment.date,
+      newComment.content, TAG, 'unclassified'));
   }
 }
 
@@ -196,9 +207,13 @@ function suspiciousComment(content) {
 
 function saveComment(saveButton) {
   var $root = saveButton.parent().parent();
+
   var comment_id = $root.attr('comment_id');
   var tag = saveButton.attr('tag');
   var content = $root.find('.comment_content').html();
+  var author = $root.find('.comment_author').html();
+  var date = new Date($root.find('.comment_date').html());
+  date = date.getTime()/1000;
 
   $.ajax({
     type: 'POST',
@@ -206,6 +221,8 @@ function saveComment(saveButton) {
     headers: {'X-CSRFToken': CSRFTOKEN},
     data: {comment_id: comment_id,
         video_id: VIDEO_ID,
+        author: author,
+        date: date,
         content: content,
         tag: tag },
     dataType: 'text'

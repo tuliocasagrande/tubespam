@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.db.models import Count
@@ -19,7 +20,7 @@ def watch(request):
   if not video_id:
     return redirect('index')
 
-  comments = Comment.objects.filter(video_id=video_id)
+  comments = Comment.objects.filter(video_id=video_id).order_by('-date')
   spam_count = comments.filter(tag=True).count()
   ham_count = len(comments) - spam_count
 
@@ -31,6 +32,8 @@ def saveComment(request):
   try:
     comment_id = request.POST['comment_id']
     video_id = request.POST['video_id']
+    author = request.POST['author']
+    date = datetime.utcfromtimestamp(int(request.POST['date']))
     content = request.POST['content']
     tag = request.POST['tag']
   except:
@@ -44,7 +47,7 @@ def saveComment(request):
   try:
     comment = Comment.objects.get(id=comment_id)
   except Comment.DoesNotExist:
-    comment = Comment(id=comment_id, video_id=video, content=content)
+    comment = Comment(id=comment_id, author=author, date=date, video_id=video, content=content)
 
   if tag == 'spam':
     comment.tag = True
@@ -74,7 +77,7 @@ def classify(request):
     return redirect('index')
 
   video = get_object_or_404(Video, pk=video_id)
-  comments = Comment.objects.filter(video_id=video_id)
+  comments = Comment.objects.filter(video_id=video_id).order_by('-date')
   spam_count = comments.filter(tag=True).count()
   ham_count = len(comments) - spam_count
 

@@ -3,5 +3,5 @@ from datetime import datetime
 register = template.Library()
 
 @register.filter
-def get_class_name(obj):
-    return obj.__class__.__name__
+def pretty_date(datetime):
+    return datetime.strftime("%a, %d %b %Y %H:%M:%S GTM")

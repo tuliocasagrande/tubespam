@@ -11,9 +11,11 @@ class Video(models.Model):
 
 class Comment(models.Model):
   id = models.CharField(primary_key=True, max_length=64)
+  author = models.TextField()
+  date = models.DateTimeField()
   video_id = models.ForeignKey(Video)
   content = models.TextField()
-  tag = models.BooleanField()
+  tag = models.BooleanField(default=False)
 
   def __unicode__(self):
     return self.id

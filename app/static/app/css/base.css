@@ -19,6 +19,14 @@
  margin-bottom: 0px;
 }
 
+.comment_header {
+  margin-bottom: 10px;
+}
+
+.comment_author {
+  margin-right: 10px;
+}
+
 .tag_column {
   padding-left: 0;
 }
