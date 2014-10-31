@@ -174,9 +174,9 @@ def export(request):
   comments = Comment.objects.filter(video_id=video_id)
   untagged_comments = prepareNewComments(request.POST.getlist('comments'))
 
-  csv_format = '{0},"{1}","{2}","{3}",{4}'
+  csv_format = '{0},"{1}","{2}","{3}",{4}\n'
   csv = 'COMMENT_ID,AUTHOR,DATE,CONTENT,TAG\n'
-  csv += '\n'.join([
+  csv += ''.join([
                    csv_format.format(
                       each.id,
                       each.toCsv('author'),
@@ -206,7 +206,7 @@ def export(request):
     elif exportExtOption == 'ek':
       tag = [-1] * len(untagged_comments)
 
-    csv += '\n'.join([
+    csv += ''.join([
                      csv_format.format(
                         untagged_comments[i].id,
                         untagged_comments[i].toCsv('author'),

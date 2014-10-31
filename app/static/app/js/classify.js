@@ -117,7 +117,9 @@ function getNewComments(nextHandler, total_length, spam_length, ham_length) {
   }).fail(function() {
     // This usually happens when the api receives too many hits
     console.log('Something went wrong. Trying again in few seconds.');
-    setTimeout(function(){ getNewComments(url, call) }, 3000);
+    setTimeout(function(){
+      getNewComments(nextHandler, total_length, spam_length, ham_length)
+    }, 3000);
 
   }).done(function(data){
     loadNewComments(data);
@@ -377,7 +379,7 @@ $(document).ready(function(){
   NEXT_URL = 'https://gdata.youtube.com/feeds/api/videos/'+ VIDEO_ID +
              '/comments?alt=json&max-results=50&orderby=published';
 
-  //function getNewComments(nextHandler, total_length, spam_length, ham_length)
+  //getNewComments(nextHandler, total_length, spam_length, ham_length)
   getNewComments(sendToClassifier, 500, 40, 60);
 
   /* EVENTS */

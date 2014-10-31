@@ -95,36 +95,43 @@ function getVideoMeta(video_id) {
   });
 }
 
-function getNewComments(url, call) {
+function getNewComments(nextHandler, total_length, spam_length, ham_length) {
+
+  if (!nextHandler || (typeof nextHandler !== "function")) {
+    console.log('error: callback is not a function');
+    console.log(nextHandler);
+  }
 
   $.ajax({
     type: 'GET',
-    url: url,
+    url: NEXT_URL,
     dataType: 'json'
   }).fail(function() {
     // This usually happens when the api receives too many hits
     console.log('Something went wrong. Trying again in few seconds.');
-    setTimeout(function(){ getNewComments(url, call) }, 3000);
+    setTimeout(function(){
+      getNewComments(nextHandler, total_length, spam_length, ham_length)
+    }, 3000);
 
   }).done(function(data){
     loadNewComments(data);
     console.log(SUSPICIOUS_SPAM.length + SUSPICIOUS_HAM.length);
 
-    var last_link = data.feed.link.length - 1;
-    if (data.feed.link[last_link].rel == 'next') {
-      NEXT_URL = data.feed.link[last_link].href;
+    if (data.feed.link[data.feed.link.length-1].rel == 'next') {
+      NEXT_URL = data.feed.link[data.feed.link.length-1].href;
     } else {
       NEXT_URL = null;
-      putNewComments();
+      nextHandler();
       return;
     }
 
-    if (call > 20 || (SUSPICIOUS_SPAM.length > 20 && SUSPICIOUS_HAM.length > 30)) {
-      putNewComments();
+    if ((SUSPICIOUS_SPAM.length + SUSPICIOUS_HAM.length > total_length) ||
+        (SUSPICIOUS_SPAM.length > spam_length && SUSPICIOUS_HAM.length > ham_length)) {
+      nextHandler();
       return;
     }
 
-    getNewComments(NEXT_URL, call+1);
+    getNewComments(nextHandler, total_length, spam_length, ham_length);
   });
 }
 
@@ -255,7 +262,7 @@ function saveComment(saveButton) {
 }
 
 $(document).ready(function(){
-  //var CSRFTOKEN = $('[name="csrfmiddlewaretoken"]').val();
+  /* Initializing some global variables */
   CSRFTOKEN = $.cookie('csrftoken');
   VIDEO_ID = $('#video_title').attr('video_id');
 
@@ -263,10 +270,13 @@ $(document).ready(function(){
     TAGGED_COMMENTS[$(this).attr('comment_id')] = $(this).attr('comment_id');
   });
 
+  /* Retrieving first informations */
   getVideoMeta(VIDEO_ID);
-  var url = 'https://gdata.youtube.com/feeds/api/videos/'+ VIDEO_ID +'/comments?' +
-            'alt=json&max-results=50&orderby=published';
-  getNewComments(url, 0);
+  NEXT_URL = 'https://gdata.youtube.com/feeds/api/videos/'+ VIDEO_ID +
+             '/comments?alt=json&max-results=50&orderby=published';
+
+  //getNewComments(nextHandler, total_length, spam_length, ham_length)
+  getNewComments(putNewComments, 1000, 20, 30);
 
   $('#comments').on('click', '.comment_tag', function() {
     var $this = $(this);
@@ -282,7 +292,7 @@ $(document).ready(function(){
 
       if (NEXT_URL != null) {
         lockMoreCommentsButton();
-        getNewComments(NEXT_URL, 0);
+        getNewComments(putNewComments, 1000, 20, 30);
       } else {
         putNewComments();
       }
