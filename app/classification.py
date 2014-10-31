@@ -17,8 +17,8 @@ def getClassifier(video_id):
   except:
     return None
 
-# comments = QuerySet( [Comment(id, content, tag) ])
-# untaggedComments = [Comment(id, content)]
+# comments = QuerySet( [Comment(id, author, date, content, tag) ])
+# untaggedComments = [Comment(id, author, date, content)]
 # if len(comments) >= 100, untaggedComments = []
 def train(video_id, comments, untaggedComments):
 
@@ -65,7 +65,7 @@ def train(video_id, comments, untaggedComments):
   return scores.mean()*100, scores.std()*2
 
 
-# untaggedComments = [Comment(id, content)]
+# untaggedComments = [Comment(id, author, date, content)]
 def predict(video_id, untaggedComments):
 
   # Loading vectorizer & classifier

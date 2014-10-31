@@ -46,21 +46,18 @@ function decrementCounter($counter) {
   $counter.html(formattedNumber(newValue));
 }
 
-function formattedComment(id, content, tag, tagType) {
+function formattedComment(comment_id, author, date, content, tag, tagType) {
   tagType = typeof tagType !== 'undefined' ? tagType : '';
 
-  var comment = '<div class="comment row" tagType="'+ tagType +'" comment_id="'+ id +'">' +
+  var comment = '<div class="comment row" tagType="'+ tagType +'" comment_id="'+ comment_id +'">' +
+                '<p class="comment_header small-12 columns">' +
+                '<strong class="comment_author">'+ author +'</strong>'+
+                '<a href="https://www.youtube.com/watch?v='+ VIDEO_ID +'&google_comment_id='+comment_id+'" target="_blank">' +
+                '<small class="comment_date">'+ date +'</small></a></p>' +
                 '<p class="comment_content small-9 columns">'+ content +'</p>' +
                 tag +'</div><hr/>';
 
   return comment;
-}
-
-function formattedDate(date) {
-  var MONTH_NAMES = ["Jan ", "Feb ", "Mar ", "Apr ", "May ", "Jun ",
-                     "Jul ", "Aug ", "Sep ", "Oct ", "Nov ", "Dec "];
-
-  return 'Uploaded on ' + MONTH_NAMES[date.getMonth()] + date.getDate() + ', ' + date.getFullYear();
 }
 
 function formattedNumber(number, decimals, dec_point, thousands_sep) {
@@ -91,7 +88,7 @@ function getVideoMeta(video_id) {
   }).done(function(data){
     document.title = data.entry.title.$t;
     $('#video_title').html(data.entry.title.$t);
-    $('#video_publish_date').html(formattedDate(new Date(data.entry.published.$t)));
+    $('#video_publish_date').html('Published on ' + new Date(data.entry.published.$t).toUTCString());
     $('#video_content').html(data.entry.content.$t);
 
     $('#viewCount').html(formattedNumber(data.entry.yt$statistics.viewCount));
@@ -118,8 +115,10 @@ function getNewComments(nextHandler, total_length, spam_length, ham_length) {
     url: NEXT_URL,
     dataType: 'json'
   }).fail(function() {
-    $('#comments').append("Comments are disabled for this video.");
-    $moreComments.remove();
+    // This usually happens when the api receives too many hits
+    console.log('Something went wrong. Trying again in few seconds.');
+    setTimeout(function(){ getNewComments(url, call) }, 3000);
+
   }).done(function(data){
     loadNewComments(data);
     console.log(SUSPICIOUS_SPAM.length + SUSPICIOUS_HAM.length);
@@ -144,7 +143,7 @@ function getNewComments(nextHandler, total_length, spam_length, ham_length) {
 
 
 function loadNewComments(data) {
-  var len, comment_id, start_index, content, newComment;
+  var len, start_index, comment_id, author, date, content, newComment;
 
   try {
     len = data.feed.entry.length;
@@ -156,6 +155,8 @@ function loadNewComments(data) {
   for (var i = 0; i < len; i++) {
     start_index = data.feed.entry[i].id.$t.lastIndexOf('/') + 1;
     comment_id = data.feed.entry[i].id.$t.substring(start_index);
+    author = data.feed.entry[i].author[0].name.$t;
+    date = new Date(data.feed.entry[i].published.$t).toUTCString();
     content = data.feed.entry[i].content.$t;
 
     if (TAGGED_COMMENTS.hasOwnProperty(comment_id)) {
@@ -164,7 +165,7 @@ function loadNewComments(data) {
       continue;
     }
 
-    newComment = {comment_id: comment_id, content: content};
+    newComment = {comment_id: comment_id, author: author, date: date, content: content};
     if (suspiciousComment(content)) {
       SUSPICIOUS_SPAM.push(newComment);
     } else {
@@ -186,11 +187,13 @@ function sendToClassifier() {
 
     for (var key in data) {
       if (data[key].tag === "1") {
-        $('#comments').append(formattedComment(key,
-          data[key].content, SPAM_TAG, 'automatic'));
+        $('#comments').append(formattedComment(
+                              key, data[key].author, data[key].date,
+                              data[key].content, SPAM_TAG, 'automatic'));
       } else {
-        $('#comments').append(formattedComment(key,
-          data[key].content, HAM_TAG, 'automatic'));
+        $('#comments').append(formattedComment(
+                              key, data[key].author, data[key].date,
+                              data[key].content, HAM_TAG, 'automatic'));
       }
     }
 
@@ -223,6 +226,8 @@ function retrainClassifier() {
   var $commentsChildrenAutomatic = $comments.children('.comment[tagType=automatic]');
   $commentsChildrenAutomatic.each(function() {
     newComment = {comment_id: $(this).attr('comment_id'),
+                  author: $(this).find('.comment_author').html(),
+                  date: $(this).find('.comment_date').html(),
                   content: $(this).find('.comment_content').html()};
     $(this).remove();
     newList.push(JSON.stringify(newComment));
@@ -240,11 +245,13 @@ function retrainClassifier() {
 
     for (var key in data) {
       if (data[key].tag === "1") {
-        $('#comments').append(formattedComment(key,
-          data[key].content, SPAM_TAG, 'automatic'));
+        $('#comments').append(formattedComment(
+                              key, data[key].author, data[key].date,
+                              data[key].content, SPAM_TAG, 'automatic'));
       } else {
-        $('#comments').append(formattedComment(key,
-          data[key].content, HAM_TAG, 'automatic'));
+        $('#comments').append(formattedComment(
+                              key, data[key].author, data[key].date,
+                              data[key].content, HAM_TAG, 'automatic'));
       }
     }
 
@@ -295,18 +302,23 @@ function suspiciousComment(content) {
 
 function saveComment(saveButton) {
   var $root = saveButton.parent().parent();
+
   var comment_id = $root.attr('comment_id');
   var tag = saveButton.attr('tag');
   var content = $root.find('.comment_content').html();
+  var author = $root.find('.comment_author').html();
+  var date = $root.find('.comment_date').html();
 
   $.ajax({
     type: 'POST',
     url: '/saveComment',
     headers: {'X-CSRFToken': CSRFTOKEN},
     data: {comment_id: comment_id,
-           video_id: VIDEO_ID,
-           content: content,
-           tag: tag },
+        video_id: VIDEO_ID,
+        author: author,
+        date: date,
+        content: content,
+        tag: tag },
     dataType: 'text'
   }).done(function(num_untrd_comments) {
     var sibling = saveButton.siblings();
@@ -443,6 +455,8 @@ $(document).ready(function(){
       $commentsChildrenAutomatic.each(function() {
 
         newComment = {comment_id: $(this).attr('comment_id'),
+                      author: $(this).find('.comment_author').html(),
+                      date: $(this).find('.comment_date').html(),
                       content: $(this).find('.comment_content').html()};
 
         newComment = JSON.stringify(newComment).replace(/"/g, '&quot;');

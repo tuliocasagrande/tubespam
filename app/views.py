@@ -7,6 +7,8 @@ import json
 from app.models import Video, Comment
 import app.classification as classification
 
+DATE_FORMAT = "%a, %d %b %Y %H:%M:%S GMT"
+
 def index(request):
   #q = Video.objects.all()
   q = Comment.objects.values('video_id').annotate(num_comments=Count('id')).order_by('-num_comments')
@@ -33,7 +35,7 @@ def saveComment(request):
     comment_id = request.POST['comment_id']
     video_id = request.POST['video_id']
     author = request.POST['author']
-    date = datetime.utcfromtimestamp(int(request.POST['date']))
+    date = datetime.strptime(request.POST['date'], DATE_FORMAT)
     content = request.POST['content']
     tag = request.POST['tag']
   except:
@@ -108,9 +110,9 @@ def classify(request):
   return render(request, 'app/classify.html', output)
 
 def train(request):
+  output = '{'
   if request.is_ajax():
     if request.method == 'POST':
-      output = '{'
 
       video_id = request.POST['v']
       video = Video.objects.get(id=video_id)
@@ -135,11 +137,18 @@ def train(request):
           video.save()
           pred = classification.predict(video_id, untagged_comments)
 
-        json = '"{0}":{{"content":"{1}","tag":"{2}"}}'
-        output += ','.join([json.format(untagged_comments[i].id, untagged_comments[i].getEscapedContentJson(), pred[i])
-                            for i in range(len(untagged_comments))])
-      output += '}'
+        json_format = '"{0}":{{"author":"{1}","date":"{2}","content":"{3}","tag":"{4}"}}'
+        output += ','.join([
+                           json_format.format(
+                              untagged_comments[i].id,
+                              untagged_comments[i].toJson('author'),
+                              untagged_comments[i].date.strftime(DATE_FORMAT),
+                              untagged_comments[i].toJson('content'),
+                              pred[i])
+                           for i in range(len(untagged_comments))
+                           ])
 
+  output += '}'
   return HttpResponse(output)
 
 def reloadClassifierInfo(request):
@@ -165,11 +174,24 @@ def export(request):
   comments = Comment.objects.filter(video_id=video_id)
   untagged_comments = prepareNewComments(request.POST.getlist('comments'))
 
-  csv = 'COMMENT_ID,CONTENT,TAG\n'
-  for each in comments:
-    content = each.getEscapedContentCsv()
-    tag = 1 if each.tag else 0
-    csv += '{0},"{1}",{2}\n'.format(each.id, content, tag)
+  csv_format = '{0},"{1}","{2}","{3}",{4}'
+  csv = 'COMMENT_ID,AUTHOR,DATE,CONTENT,TAG\n'
+  csv += '\n'.join([
+                   csv_format.format(
+                      each.id,
+                      each.toCsv('author'),
+                      each.date.isoformat(),
+                      each.toCsv('content'),
+                      1 if each.tag else 0)
+                   for each in comments
+                   ])
+  # for each in comments:
+    # author = each.toCsv('author')
+    # timestamp = each.getTimestamp()
+    # date = each.date.isoformat()
+    # content = each.toCsv('content')
+    # tag = 1 if each.tag else 0
+    # csv += '{0},"{1}",{2},"{3}","{4}",{5}\n'.format(each.id, author, timestamp, date, content, tag)
 
   # Export options:
   # m  => manually classified only
@@ -180,16 +202,28 @@ def export(request):
     # ec => apply the trained classifier
     # ek => keep comments unclassified
     if exportExtOption == 'ec':
-      pred = classification.predict(video_id, untagged_comments)
-      for i in range(len(untagged_comments)):
-        content = untagged_comments[i].getEscapedContentCsv()
-        csv += '{0},"{1}",{2}\n'.format(untagged_comments[i].id, content, pred[i])
-
+      tag = classification.predict(video_id, untagged_comments)
     elif exportExtOption == 'ek':
-      for each in untagged_comments:
-        content = each.getEscapedContentCsv()
-        csv += '{0},"{1}",-1\n'.format(each.id, content)
+      tag = [-1] * len(untagged_comments)
 
+    csv += '\n'.join([
+                     csv_format.format(
+                        untagged_comments[i].id,
+                        untagged_comments[i].toCsv('author'),
+                        untagged_comments[i].date.isoformat(),
+                        untagged_comments[i].toCsv('content'),
+                        tag[i])
+                     for i in range(len(untagged_comments))
+                     ])
+
+      # for i in range(len(untagged_comments)):
+        # author = untagged_comments[i].toCsv('author')
+        # timestamp = untagged_comments[i].getTimestamp()
+        # date = untagged_comments[i].date.strftime(DATE_FORMAT)
+        # content = untagged_comments[i].toCsv('content')
+        # content = untagged_comments[i].getEscapedContentCsv()
+        # csv += '{0},"{1}",{2},"{3}","{4}",{5}\n'.format(untagged_comments[i].id, author, timestamp, date, content, tag[i])
+        # csv += writeCsvRow(untagged_comments[i], tag[i])
 
   response = HttpResponse(csv, content_type='text/plain')
   response['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(video_id)
@@ -200,7 +234,8 @@ def prepareNewComments(untagged_comments):
 
   for each in untagged_comments:
     j = json.loads(each)
-    c = Comment(id=j['comment_id'], content=j['content'])
+    c = Comment(id=j['comment_id'], author=j['author'],
+                date=datetime.strptime(j['date'], DATE_FORMAT), content=j['content'])
 
     newComments.append(c)
 

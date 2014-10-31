@@ -44,18 +44,11 @@ function formattedComment(comment_id, author, date, content, tag, tagType) {
                 '<p class="comment_header small-12 columns">' +
                 '<strong class="comment_author">'+ author +'</strong>'+
                 '<a href="https://www.youtube.com/watch?v='+ VIDEO_ID +'&google_comment_id='+comment_id+'" target="_blank">' +
-                '<small class="comment_date">' + date.toUTCString() +'</small></a></p>' +
+                '<small class="comment_date">'+ date +'</small></a></p>' +
                 '<p class="comment_content small-9 columns">'+ content +'</p>' +
                 tag +'</div><hr/>';
 
   return comment;
-}
-
-function formattedDate(date) {
-  var MONTH_NAMES = ["Jan ", "Feb ", "Mar ", "Apr ", "May ", "Jun ",
-                     "Jul ", "Aug ", "Sep ", "Oct ", "Nov ", "Dec "];
-
-  return 'Published on ' + MONTH_NAMES[date.getMonth()] + date.getDate() + ', ' + date.getFullYear();
 }
 
 function formattedNumber(number, decimals, dec_point, thousands_sep) {
@@ -86,7 +79,7 @@ function getVideoMeta(video_id) {
   }).done(function(data){
     document.title = data.entry.title.$t;
     $('#video_title').html(data.entry.title.$t);
-    $('#video_publish_date').html(formattedDate(new Date(data.entry.published.$t)));
+    $('#video_publish_date').html('Published on ' + new Date(data.entry.published.$t).toUTCString());
     $('#video_content').html(data.entry.content.$t);
 
     $('#viewCount').html(formattedNumber(data.entry.yt$statistics.viewCount));
@@ -109,9 +102,7 @@ function getNewComments(url, call) {
     url: url,
     dataType: 'json'
   }).fail(function() {
-    // $('#comments').append("Comments are disabled for this video.");
-    // $moreComments.remove();
-
+    // This usually happens when the api receives too many hits
     console.log('Something went wrong. Trying again in few seconds.');
     setTimeout(function(){ getNewComments(url, call) }, 3000);
 
@@ -152,7 +143,7 @@ function loadNewComments(data) {
     start_index = data.feed.entry[i].id.$t.lastIndexOf('/') + 1;
     comment_id = data.feed.entry[i].id.$t.substring(start_index);
     author = data.feed.entry[i].author[0].name.$t;
-    date = new Date(data.feed.entry[i].published.$t);
+    date = new Date(data.feed.entry[i].published.$t).toUTCString();
     content = data.feed.entry[i].content.$t;
 
     if (TAGGED_COMMENTS.hasOwnProperty(comment_id)) {
@@ -212,8 +203,7 @@ function saveComment(saveButton) {
   var tag = saveButton.attr('tag');
   var content = $root.find('.comment_content').html();
   var author = $root.find('.comment_author').html();
-  var date = new Date($root.find('.comment_date').html());
-  date = date.getTime()/1000;
+  var date = $root.find('.comment_date').html();
 
   $.ajax({
     type: 'POST',
