@@ -138,15 +138,13 @@ def train(request):
           pred = classification.predict(video_id, untagged_comments)
 
         json_format = '"{0}":{{"author":"{1}","date":"{2}","content":"{3}","tag":"{4}"}}'
-        output += ','.join([
-                           json_format.format(
-                              untagged_comments[i].id,
-                              untagged_comments[i].toJson('author'),
-                              untagged_comments[i].date.strftime(DATE_FORMAT),
-                              untagged_comments[i].toJson('content'),
+        output += ','.join([json_format.format(
+                              each.id,
+                              each.toJson('author'),
+                              each.date.strftime(DATE_FORMAT),
+                              each.toJson('content'),
                               pred[i])
-                           for i in range(len(untagged_comments))
-                           ])
+                            for i, each in enumerate(untagged_comments)])
 
   output += '}'
   return HttpResponse(output)
@@ -170,33 +168,28 @@ def export(request):
     return redirect('index')
 
   exportOption = request.POST.get('export-option')
-  exportExtOption = request.POST.get('export-ext-option')
-  comments = Comment.objects.filter(video_id=video_id)
-  untagged_comments = prepareNewComments(request.POST.getlist('comments'))
+  comments = Comment.objects.filter(video_id=video_id).order_by('date')
 
   csv_format = '{0},"{1}","{2}","{3}",{4}\n'
   csv = 'COMMENT_ID,AUTHOR,DATE,CONTENT,TAG\n'
-  csv += ''.join([
-                   csv_format.format(
-                      each.id,
-                      each.toCsv('author'),
-                      each.date.isoformat(),
-                      each.toCsv('content'),
-                      1 if each.tag else 0)
-                   for each in comments
-                   ])
-  # for each in comments:
-    # author = each.toCsv('author')
-    # timestamp = each.getTimestamp()
-    # date = each.date.isoformat()
-    # content = each.toCsv('content')
-    # tag = 1 if each.tag else 0
-    # csv += '{0},"{1}",{2},"{3}","{4}",{5}\n'.format(each.id, author, timestamp, date, content, tag)
+  csv += ''.join([csv_format.format(
+                    each.id,
+                    each.toCsv('author'),
+                    each.date.isoformat(),
+                    each.toCsv('content'),
+                    1 if each.tag else 0)
+                  for each in comments])
 
   # Export options:
   # m  => manually classified only
   # mu => manually classified and unclassified
   if exportOption == 'mu':
+
+    exportExtOption = request.POST.get('export-ext-option')
+    export_amount = int(request.POST.get('export-amount'))
+    untagged_comments = prepareNewComments(request.POST.getlist('comments'))
+    untagged_comments.sort(key=lambda comment: comment.date)
+    untagged_comments = untagged_comments[(export_amount * -1):]
 
     # Export extended options:
     # ec => apply the trained classifier
@@ -206,24 +199,13 @@ def export(request):
     elif exportExtOption == 'ek':
       tag = [-1] * len(untagged_comments)
 
-    csv += ''.join([
-                     csv_format.format(
-                        untagged_comments[i].id,
-                        untagged_comments[i].toCsv('author'),
-                        untagged_comments[i].date.isoformat(),
-                        untagged_comments[i].toCsv('content'),
-                        tag[i])
-                     for i in range(len(untagged_comments))
-                     ])
-
-      # for i in range(len(untagged_comments)):
-        # author = untagged_comments[i].toCsv('author')
-        # timestamp = untagged_comments[i].getTimestamp()
-        # date = untagged_comments[i].date.strftime(DATE_FORMAT)
-        # content = untagged_comments[i].toCsv('content')
-        # content = untagged_comments[i].getEscapedContentCsv()
-        # csv += '{0},"{1}",{2},"{3}","{4}",{5}\n'.format(untagged_comments[i].id, author, timestamp, date, content, tag[i])
-        # csv += writeCsvRow(untagged_comments[i], tag[i])
+    csv += ''.join([csv_format.format(
+                      each.id,
+                      each.toCsv('author'),
+                      each.date.isoformat(),
+                      each.toCsv('content'),
+                      tag[i])
+                    for i, each in enumerate(untagged_comments)])
 
   response = HttpResponse(csv, content_type='text/plain')
   response['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(video_id)

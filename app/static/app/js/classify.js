@@ -426,21 +426,19 @@ $(document).ready(function(){
     }
 
     lockLoadingButton($exportButton);
-
-    $('#export-comments').empty();
+    var $exportComments = $('#export-comments');
+    $exportComments.empty();
 
     /* Export options:
      * m  => manually classified only
      * mu => manually classified and unclassified
-     * ma => manually and automatically classified
      */
     var exportOption = $('input[name=export-option]:checked', '#export-form').val();
     if (exportOption !== 'm') {
 
-      var exportAmount = $('#export-amout').val();
+      var exportAmount = $('#export-amount').val();
       if (exportAmount <= 0) exportAmount = 0;
 
-      var $exportComments = $('#export-comments');
       var $commentsChildrenAutomatic = $('#comments').children('.comment[tagType=automatic]');
       var newComment;
       var spam_length, ham_length;
