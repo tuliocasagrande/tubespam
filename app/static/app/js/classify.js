@@ -46,136 +46,6 @@ function decrementCounter($counter) {
   $counter.html(formattedNumber(newValue));
 }
 
-function formattedComment(comment_id, author, date, content, tag, tagType) {
-  tagType = typeof tagType !== 'undefined' ? tagType : '';
-
-  var comment = '<div class="comment row" tagType="'+ tagType +'" comment_id="'+ comment_id +'">' +
-                '<p class="comment_header small-12 columns">' +
-                '<strong class="comment_author">'+ author +'</strong>'+
-                '<a href="https://www.youtube.com/watch?v='+ VIDEO_ID +'&google_comment_id='+comment_id+'" target="_blank">' +
-                '<small class="comment_date">'+ date +'</small></a></p>' +
-                '<p class="comment_content small-9 columns">'+ content +'</p>' +
-                tag +'</div><hr/>';
-
-  return comment;
-}
-
-function formattedNumber(number, decimals, dec_point, thousands_sep) {
-  // http://kevin.vanzonneveld.net
-  // +   original by: Jonas Raoni Soares Silva (http://www.jsfromhell.com)
-  // +   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
-  // +   bugfix by: Michael White (http://crestidg.com)
-  // +   bugfix by: Benjamin Lupton
-  // +   bugfix by: Allan Jensen (http://www.winternet.no)
-  // +  revised by: Jonas Raoni Soares Silva (http://www.jsfromhell.com)
-  // *   example 1: number_format(1234.5678, 2, '.', '');
-  // *   returns 1: 1234.57
-
-  var n = number, c = isNaN(decimals = Math.abs(decimals)) ? 0 : decimals;
-  var d = dec_point == undefined ? "." : dec_point;
-  var t = thousands_sep == undefined ? "," : thousands_sep, s = n < 0 ? "-" : "";
-  var i = parseInt(n = Math.abs(+n || 0).toFixed(c)) + "", j = (j = i.length) > 3 ? j % 3 : 0;
-
-  return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
-}
-
-function getVideoMeta(video_id) {
-  var url = 'https://gdata.youtube.com/feeds/api/videos/'+ video_id +'?alt=json';
-  $.ajax({
-    type: 'GET',
-    url: url,
-    dataType: 'json'
-  }).done(function(data){
-    document.title = data.entry.title.$t;
-    $('#video_title').html(data.entry.title.$t);
-    $('#video_publish_date').html('Published on ' + new Date(data.entry.published.$t).toUTCString());
-    $('#video_content').html(data.entry.content.$t);
-
-    $('#viewCount').html(formattedNumber(data.entry.yt$statistics.viewCount));
-
-    try {
-      var commentCount = data.entry.gd$comments.gd$feedLink.countHint;
-      $('#commentCount').html(formattedNumber(commentCount));
-    } catch(e) {
-      $('#comments').append("Comments are disabled for this video.");
-      $moreComments.remove();
-    }
-  });
-}
-
-function getNewComments(nextHandler, total_length, spam_length, ham_length) {
-
-  if (!nextHandler || (typeof nextHandler !== "function")) {
-    console.log('error: callback is not a function');
-    console.log(nextHandler);
-  }
-
-  $.ajax({
-    type: 'GET',
-    url: NEXT_URL,
-    dataType: 'json'
-  }).fail(function() {
-    // This usually happens when the api receives too many hits
-    console.log('Something went wrong. Trying again in few seconds.');
-    setTimeout(function(){
-      getNewComments(nextHandler, total_length, spam_length, ham_length)
-    }, 3000);
-
-  }).done(function(data){
-    loadNewComments(data);
-    console.log(SUSPICIOUS_SPAM.length + SUSPICIOUS_HAM.length);
-
-    if (data.feed.link[data.feed.link.length-1].rel == 'next') {
-      NEXT_URL = data.feed.link[data.feed.link.length-1].href;
-    } else {
-      NEXT_URL = null;
-      nextHandler();
-      return;
-    }
-
-    if ((SUSPICIOUS_SPAM.length + SUSPICIOUS_HAM.length > total_length) ||
-        (SUSPICIOUS_SPAM.length > spam_length && SUSPICIOUS_HAM.length > ham_length)) {
-      nextHandler();
-      return;
-    }
-
-    getNewComments(nextHandler, total_length, spam_length, ham_length);
-  });
-}
-
-
-function loadNewComments(data) {
-  var len, start_index, comment_id, author, date, content, newComment;
-
-  try {
-    len = data.feed.entry.length;
-  } catch(e) {
-    console.log(e);
-    len = 0;
-  }
-
-  for (var i = 0; i < len; i++) {
-    start_index = data.feed.entry[i].id.$t.lastIndexOf('/') + 1;
-    comment_id = data.feed.entry[i].id.$t.substring(start_index);
-    author = data.feed.entry[i].author[0].name.$t;
-    date = new Date(data.feed.entry[i].published.$t).toUTCString();
-    content = data.feed.entry[i].content.$t;
-
-    if (TAGGED_COMMENTS.hasOwnProperty(comment_id)) {
-      continue;
-    } else if (!content.trim()) {
-      continue;
-    }
-
-    newComment = {comment_id: comment_id, author: author, date: date, content: content};
-    if (suspiciousComment(content)) {
-      SUSPICIOUS_SPAM.push(newComment);
-    } else {
-      SUSPICIOUS_HAM.push(newComment);
-    }
-  }
-}
-
 function sendToClassifier() {
   var comments = mergeLists(SUSPICIOUS_SPAM, 40, SUSPICIOUS_HAM, 60);
 
@@ -185,6 +55,11 @@ function sendToClassifier() {
     headers: {'X-CSRFToken': CSRFTOKEN},
     data: { v: VIDEO_ID, 'comments[]': comments },
     dataType: 'json'
+  }).fail(function(data) {
+    $moreComments.remove();
+    console.log('ERROR! The server did\'t return a correct JSON.');
+    console.log(data.responseText);
+
   }).done(function(data) {
 
     for (var key in data) {
@@ -207,10 +82,6 @@ function sendToClassifier() {
       unlockLoadingButton($moreComments);
       $('#export-modal-button').removeAttr('disabled');
     }
-  }).fail(function(data) {
-    $moreComments.remove();
-    console.log('ERROR JSON!!!');
-    console.log(data.responseText);
   });
 }
 
@@ -218,14 +89,14 @@ function retrainClassifier() {
   var $comments = $('#comments');
   var $classifiedComments = $('#classified_comments');
 
-  var $commentsChildrenManual = $comments.children('.comment[tagType=manual]');
+  var $commentsChildrenManual = $comments.children('.comment[tag_type=manual]');
   $commentsChildrenManual.each(function() {
     $classifiedComments.append('<hr/>')
     $(this).appendTo($classifiedComments);
   });
 
   var newList = [];
-  var $commentsChildrenAutomatic = $comments.children('.comment[tagType=automatic]');
+  var $commentsChildrenAutomatic = $comments.children('.comment[tag_type=automatic]');
   $commentsChildrenAutomatic.each(function() {
     newComment = {comment_id: $(this).attr('comment_id'),
                   author: $(this).find('.comment_author').html(),
@@ -322,12 +193,15 @@ function saveComment(saveButton) {
         content: content,
         tag: tag },
     dataType: 'text'
+  }).fail(function(data) {
+    console.log(data.responseText);
+
   }).done(function(num_untrd_comments) {
     var sibling = saveButton.siblings();
 
     if (tag == 'spam') {
       incrementCounter($spamCount);
-      if ($root.attr('tagType') == 'manual') {
+      if ($root.attr('tag_type') == 'manual') {
         decrementCounter($hamCount);
       } else {
         incrementCounter($classifiedCount);
@@ -337,7 +211,7 @@ function saveComment(saveButton) {
 
     } else {
       incrementCounter($hamCount);
-      if ($root.attr('tagType') == 'manual') {
+      if ($root.attr('tag_type') == 'manual') {
         decrementCounter($spamCount);
       } else {
         incrementCounter($classifiedCount);
@@ -348,7 +222,7 @@ function saveComment(saveButton) {
 
     saveButton.attr('disabled', true);
     sibling.removeAttr('disabled');
-    $root.attr('tagType', 'manual');
+    $root.attr('tag_type', 'manual');
 
     console.log(num_untrd_comments);
     if (num_untrd_comments >= 5) {
@@ -370,7 +244,7 @@ $(document).ready(function(){
   CSRFTOKEN = $.cookie('csrftoken');
   VIDEO_ID = $('#video_title').attr('video_id');
 
-  $('#classified_comments').children('.comment[tagType=manual]').each(function() {
+  $('#classified_comments').children('.comment[tag_type=manual]').each(function() {
     TAGGED_COMMENTS[$(this).attr('comment_id')] = $(this).attr('comment_id');
   });
 
@@ -439,7 +313,7 @@ $(document).ready(function(){
       var exportAmount = $('#export-amount').val();
       if (exportAmount <= 0) exportAmount = 0;
 
-      var $commentsChildrenAutomatic = $('#comments').children('.comment[tagType=automatic]');
+      var $commentsChildrenAutomatic = $('#comments').children('.comment[tag_type=automatic]');
       var newComment;
       var spam_length, ham_length;
       spam_length = ham_length = exportAmount;

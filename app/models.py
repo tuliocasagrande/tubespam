@@ -7,7 +7,7 @@ class Video(models.Model):
   stddev = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
 
   def __unicode__(self):
-    return self.id
+    return unicode(self.id) or u''
 
 class Comment(models.Model):
   id = models.CharField(primary_key=True, max_length=64)

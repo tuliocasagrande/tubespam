@@ -38,12 +38,13 @@ def saveComment(request):
     date = datetime.strptime(request.POST['date'], DATE_FORMAT)
     content = request.POST['content']
     tag = request.POST['tag']
-  except:
-    return HttpResponse('error!', status=400)
+  except Exception as e:
+    print 'ERROR!', e
+    return HttpResponse(('ERROR! ', e), status=400)
 
   if (not comment_id or not video_id or not content or not tag or
       (tag != 'spam' and tag != 'ham')):
-    return HttpResponse('error!', status=400)
+    return HttpResponse('ERROR! Missing values!', status=400)
 
   video = retrieveVideo(video_id)
   try:

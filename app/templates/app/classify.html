@@ -34,7 +34,7 @@
       <div id="comments">
         <h3>Prediction</h3><hr/>
       {% for c, p in prediction %}
-        <div class="comment row" tagType="automatic" comment_id="{{ c }}">
+        <div class="comment row" tag_type="automatic" comment_id="{{ c }}">
           <p class="content small-9 columns">{{ c }}</p>
           <div class="small-3 columns">
           {% if p %}
@@ -93,6 +93,7 @@
   <script src="{% static 'app/js/vendor/fastclick.js' %}"></script>
   <script src="{% static 'app/js/vendor/jquery.cookie.js' %}"></script>
   <script src="{% static 'app/js/foundation.min.js' %}"></script>
+  <script src="{% static 'app/js/base.js' %}" type="text/javascript"></script>
   <script src="{% static 'app/js/classify.js' %}" type="text/javascript"></script>
   <script>
     $(document).foundation();

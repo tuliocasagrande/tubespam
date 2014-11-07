@@ -1,12 +1,12 @@
         {% load pretty_date %}
-        <div class="comment row" tagType="manual" comment_id="{{ c.id }}">
+        <div class="comment row" tag_type="manual" comment_id="{{ c.id }}">
           <p class="comment_header small-12 columns">
             <strong class="comment_author">{{ c.author }}</strong>
             <a href="https://www.youtube.com/watch?v={{ video_id }}&google_comment_id={{ c.id }}" target="_blank">
               <small class="comment_date">{{ c.date | pretty_date }}</small>
             </a>
           </p>
-          <p class="comment_content small-9 columns">{{ c.content }}</p>
+          <p class="comment_content small-9 columns">{{ c.content | safe }}</p>
           <div class="tag_column small-3 columns">
           {% if c.tag %}
             <span class="comment_tag right tiny secondary button alert spam" disabled tag="spam">Spam</span>
