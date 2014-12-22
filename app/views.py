@@ -86,7 +86,7 @@ def classify(request):
 
   output = {'video_id': video_id, 'len_error': False,
             'spam_count': spam_count, 'ham_count': ham_count,
-            'clf': classification.getClassifier(video_id)}
+            'clf': classification.get_classifier(video_id)}
 
   if spam_count < 10 or ham_count < 10:
      output['len_error'] = True
@@ -97,11 +97,11 @@ def classify(request):
   #   pred = classification.predict(video_id, test())
 
   # else:
-  #   video.acc, video.stddev = classification.train(video_id, comments)
+  #   video.acc, video.stddev = classification.fit(video_id, comments)
   #   video.num_untrd_comments = 0
   #   video.save()
   #   pred = classification.predict(video_id, test())
-  #   output['clf'] = classification.getClassifier(video_id)
+  #   output['clf'] = classification.get_classifier(video_id)
 
 
   output['acc'] = video.acc
@@ -121,7 +121,7 @@ def train(request):
       comments = Comment.objects.filter(video_id=video_id)
       spam_count = comments.filter(tag=True).count()
       ham_count = len(comments) - spam_count
-      clf = classification.getClassifier(video_id)
+      clf = classification.get_classifier(video_id)
 
       if video_id and untagged_comments and spam_count >= 10 and ham_count >= 10:
         if video.num_untrd_comments < 5 and clf != None:
@@ -130,9 +130,9 @@ def train(request):
         else:
           # FIX SEMI-SUPERVISED
           if spam_count + ham_count < 100:
-            video.acc, video.stddev = classification.train(video_id, comments, untagged_comments)
+            video.acc, video.stddev = classification.fit(video_id, comments, untagged_comments)
           else:
-            video.acc, video.stddev = classification.train(video_id, comments, [])
+            video.acc, video.stddev = classification.fit(video_id, comments, [])
 
           video.num_untrd_comments = 0
           video.save()
@@ -155,7 +155,7 @@ def reloadClassifierInfo(request):
 
   video_id = request.GET['v']
   video = Video.objects.get(id=video_id)
-  clf = classification.getClassifier(video_id)
+  clf = classification.get_classifier(video_id)
   if video and clf:
     output = '<hr/><div class="pulse">' \
              '<div><strong>Classifier:</strong> {} (c: {})</div>' \
