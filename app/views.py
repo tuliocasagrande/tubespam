@@ -117,26 +117,21 @@ def train(request):
 
       video_id = request.POST['v']
       video = Video.objects.get(id=video_id)
-      untagged_comments = prepareNewComments(request.POST.getlist('comments[]'))
+      unlabeled_comments = prepareNewComments(request.POST.getlist('comments[]'))
       comments = Comment.objects.filter(video_id=video_id)
       spam_count = comments.filter(tag=True).count()
       ham_count = len(comments) - spam_count
       clf = classification.get_classifier(video_id)
 
-      if video_id and untagged_comments and spam_count >= 10 and ham_count >= 10:
+      if video_id and unlabeled_comments and spam_count >= 10 and ham_count >= 10:
         if video.num_untrd_comments < 5 and clf != None:
-          pred = classification.predict(video_id, untagged_comments)
+          pred = classification.predict(video_id, unlabeled_comments)
 
         else:
-          # FIX SEMI-SUPERVISED
-          if spam_count + ham_count < 100:
-            video.acc, video.stddev = classification.fit(video_id, comments, untagged_comments)
-          else:
-            video.acc, video.stddev = classification.fit(video_id, comments, [])
-
+          video.acc, video.stddev = classification.fit(video_id, comments, ss_comments)
           video.num_untrd_comments = 0
           video.save()
-          pred = classification.predict(video_id, untagged_comments)
+          pred = classification.predict(video_id, unlabeled_comments)
 
         json_format = '"{0}":{{"author":"{1}","date":"{2}","content":"{3}","tag":"{4}"}}'
         output += ','.join([json_format.format(
@@ -145,7 +140,7 @@ def train(request):
                               each.date.strftime(DATE_FORMAT),
                               each.toJson('content'),
                               pred[i])
-                            for i, each in enumerate(untagged_comments)])
+                            for i, each in enumerate(unlabeled_comments)])
 
   output += '}'
   return HttpResponse(output)
@@ -188,17 +183,17 @@ def export(request):
 
     exportExtOption = request.POST.get('export-ext-option')
     export_amount = int(request.POST.get('export-amount'))
-    untagged_comments = prepareNewComments(request.POST.getlist('comments'))
-    untagged_comments.sort(key=lambda comment: comment.date)
-    untagged_comments = untagged_comments[(export_amount * -1):]
+    unlabeled_comments = prepareNewComments(request.POST.getlist('comments'))
+    unlabeled_comments.sort(key=lambda comment: comment.date)
+    unlabeled_comments = unlabeled_comments[(export_amount * -1):]
 
     # Export extended options:
     # ec => apply the trained classifier
     # ek => keep comments unclassified
     if exportExtOption == 'ec':
-      tag = classification.predict(video_id, untagged_comments)
+      tag = classification.predict(video_id, unlabeled_comments)
     elif exportExtOption == 'ek':
-      tag = [-1] * len(untagged_comments)
+      tag = [-1] * len(unlabeled_comments)
 
     csv += ''.join([csv_format.format(
                       each.id,
@@ -206,16 +201,16 @@ def export(request):
                       each.date.isoformat(),
                       each.toCsv('content'),
                       tag[i])
-                    for i, each in enumerate(untagged_comments)])
+                    for i, each in enumerate(unlabeled_comments)])
 
   response = HttpResponse(csv, content_type='text/plain')
   response['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(video_id)
   return response
 
-def prepareNewComments(untagged_comments):
+def prepareNewComments(unlabeled_comments):
   newComments = []
 
-  for each in untagged_comments:
+  for each in unlabeled_comments:
     j = json.loads(each)
     c = Comment(id=j['comment_id'], author=j['author'],
                 date=datetime.strptime(j['date'], DATE_FORMAT), content=j['content'])

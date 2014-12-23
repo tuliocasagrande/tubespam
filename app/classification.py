@@ -15,13 +15,25 @@ def get_classifier(video_id):
   except:
     return None
 
-# comments = QuerySet( [Comment(id, author, date, content, tag) ])
-# unlabeled_comments = [Comment(id, author, date, content)]
-# if len(comments) >= 100, unlabeled_comments = []
 def fit(video_id, comments, unlabeled_comments):
+  """ Dual supervised training
+      Training/fitting occurs in two steps:
+
+      1- Fit the LabelSpreading semi-supervised method with RBF kernel. It is
+      much faster than SVM and can be pretty accurate.
+
+      2- Classify unlabeled comments and retain the labels with a high level of
+      certainty to be used in the SVM fitting.
+
+      comments = QuerySet( [Comment(id, author, date, content, tag)] )
+      unlabeled_comments = [Comment(id, author, date, content)]
+  """
 
   if not os.path.exists(os.path.join('app', 'classification_files')):
     os.makedirs(os.path.join('app', 'classification_files'))
+
+  # Semi-supervised will at most double the training set
+  unlabeled_comments = unlabeled_comments[: len(comments)]
 
   contents = []
   classes = []
@@ -30,30 +42,35 @@ def fit(video_id, comments, unlabeled_comments):
     classes.append(1 if c.tag else 0)
 
   unlabeled_classes = np.repeat(-1, len(unlabeled_comments))
-  unlabeled_contents = [c.content for c in unlabeled_comments]
+  unlabeled_contents = np.asarray([c.content for c in unlabeled_comments])
 
   vectorizer = CountVectorizer(min_df=1)
-  X = vectorizer.fit_transform(contents + unlabeled_contents)
+  X = vectorizer.fit_transform(np.concatenate([contents, unlabeled_contents]))
   y = np.concatenate([classes, unlabeled_classes])
 
   range5 = [10.0**i for i in range(-5,5)]
 
   # ================= Intermediate semi-supervised classifier ================ #
-  # if len(comments) < 100, it will perform semi-supervised learning
+  # Semi-supervised clf with merged manually classified and unlabeled comments
 
-  if unlabeled_contents != []:
+  param_grid = {'gamma': range5}
+  ss_grid = GridSearchCV(LabelSpreading(kernel='rbf'), param_grid, cv=10).fit(X, y)
 
-    # Semi-supervised learning with merged unlabeled and tagged comments
-    param_grid = {'gamma': range5}
-    ss_grid = GridSearchCV(LabelSpreading(kernel='rbf'), param_grid, cv=10).fit(X, y)
+  # Predicting classes and probabilities of unlabeled comments
+  unlabeled_X = vectorizer.transform(unlabeled_contents)
+  ss_pred = ss_grid.predict(unlabeled_X)
+  ss_proba = ss_grid.predict_proba(unlabeled_X)
 
-    # Predicting classes of unlabeled comments and building a new y
-    unlabeled_X = vectorizer.transform(unlabeled_contents)
-    ss_y = ss_grid.predict(unlabeled_X)
-    y = np.concatenate([classes, ss_y])
+  # Building a new y just with comments above 0.9 of probability
+  above_threshold = [each[ss_pred[i]] >= 0.9 for i, each in enumerate(ss_proba)]
+  above_threshold = np.asarray(above_threshold)
+
+  vectorizer = CountVectorizer(min_df=1)
+  X = vectorizer.fit_transform(np.concatenate([contents, unlabeled_contents[above_threshold]]))
+  y = np.concatenate([classes, ss_pred[above_threshold]])
 
   # ============================ Final classifier ============================ #
-  # Fitting the classifier with manually classified and predicted comments
+  # Fitting the final clf with manually classified and predicted comments
 
   param_grid = {'C': range5}
   svm_grid = GridSearchCV(LinearSVC(), param_grid, cv=10).fit(X, y)
@@ -72,7 +89,7 @@ def fit(video_id, comments, unlabeled_comments):
 
 
 def predict(video_id, unlabeled_comments):
-  """ Load the classifier of the video_id and predict its unlabeled_comments.
+  """ Load the classifier of the given video_id and predict its unlabeled_comments.
       unlabeled_comments = [Comment(id, author, date, content)]
   """
 
