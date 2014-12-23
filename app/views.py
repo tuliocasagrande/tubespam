@@ -128,7 +128,7 @@ def train(request):
           pred = classification.predict(video_id, unlabeled_comments)
 
         else:
-          video.acc, video.stddev = classification.fit(video_id, comments, ss_comments)
+          video.acc, video.stddev = classification.fit(video_id, comments, unlabeled_comments)
           video.num_untrd_comments = 0
           video.save()
           pred = classification.predict(video_id, unlabeled_comments)
