@@ -3,11 +3,25 @@
 {% block title %}{% endblock %}
 
 {% block content %}
-    <div class="large-8 columns" role="content">
+{% load humanize %}
+    <div class="large-12 columns panel" role="content">
     {% if videos %}
-      <ul>
+      <ul class="small-block-grid-4">
       {% for v in videos %}
-        <li><a href="/watch?v={{ v.video_id }}">{{ v.video_id }}</a> - {{ v.num_comments }}</li>
+        <li>
+            <div class="lockup-thumbnail">
+              <a href="/watch?v={{ v.video_id }}">
+                <img alt="{{ v.title }}" src="{{ v.thumbnail }}" width="196" height="110">
+              </a>
+            </div>
+            <div class="lockup-content">
+                <a href="/watch?v={{ v.video_id }}">{{ v.title }}</a>
+                <span>by {{v.channelTitle }}</span>
+                <span>{{v.viewCount | intcomma}} views</span>
+                <span>{{v.commentCount | intcomma}} comments</span>
+                <span>{{v.num_comments | intcomma}} classified comments</span>
+            </div>
+        </li>
       {% endfor %}
       </ul>
     {% else %}

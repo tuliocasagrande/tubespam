@@ -6,12 +6,15 @@ import json
 
 from app.models import Video, Comment
 import app.classification as classification
+import app.youtube_api as youtube_api
 
 DATE_FORMAT = "%a, %d %b %Y %H:%M:%S GMT"
 
 def index(request):
   #q = Video.objects.all()
   q = Comment.objects.values('video_id').annotate(num_comments=Count('id')).order_by('-num_comments')
+  youtube_api.search_by_ids(q)
+
   return render(request, 'app/index.html', {'videos': q})
 
 def about(request):

@@ -143,13 +143,13 @@ $(document).ready(function(){
     TAGGED_COMMENTS[$(this).attr('comment_id')] = $(this).attr('comment_id');
   });
 
-  /* Retrieving first informations */
-  getVideoMeta(VIDEO_ID);
   NEXT_URL = 'https://gdata.youtube.com/feeds/api/videos/'+ VIDEO_ID +
              '/comments?alt=json&max-results=50&orderby=published';
 
-  //getNewComments(nextHandler, total_length, spam_length, ham_length)
-  getNewComments(putNewComments, 1000, 20, 30);
+  /* Retrieving first informations and checking if commenting is enable */
+  if (getVideoMeta(VIDEO_ID))
+    //getNewComments(nextHandler, total_length, spam_length, ham_length)
+    getNewComments(putNewComments, 1000, 20, 30);
 
   $('#comments').on('click', '.comment_tag', function() {
     var $this = $(this);
@@ -180,4 +180,15 @@ $(document).ready(function(){
     }
   });
 
+  $('#hide-spam-button').click(function(event) {
+    if ($(this).attr('action') == 'hide') {
+      $('#comments').find('.comment_tag[tag=spam][disabled]').parent().parent().fadeOut(1);
+      $(this).attr('action', 'show');
+      $(this).html('Show spam');
+    } else {
+      $('#comments').find('.comment_tag[tag=spam][disabled]').parent().parent().fadeIn(1);
+      $(this).attr('action', 'hide');
+      $(this).html('Hide spam');
+    }
+  });
 });

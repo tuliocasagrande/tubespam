@@ -91,10 +91,13 @@ function getVideoMeta(video_id) {
     try {
       var commentCount = data.entry.gd$comments.gd$feedLink.countHint;
       $('#commentCount').html(formattedNumber(commentCount));
+      return true;
     } catch(e) {
       console.log(e);
-      $('#comments').append("Comments are disabled for this video.");
+      $('#commentCount').html('Disabled!');
+      $('#comments').append("Comments were disabled for this video.");
       $moreComments.remove();
+      return false;
     }
   });
 }
