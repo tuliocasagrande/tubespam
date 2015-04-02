@@ -5,13 +5,14 @@
 {% block content %}
     {% load humanize %}
     {% load get_class_name %}
+    {% load pretty_date %}
     <!-- Main Content -->
     <div class="large-8 columns" role="content">
       <article>
-        <h3 id="video_title" video_id="{{ video_id }}">Loading...</h3>
+        <h3 id="video_title" video_id="{{ v.video_id }}">{{v.title}}</h3>
 
-        <small id="video_publish_date"></small>
-        <div><small id="video_content"></small></div>
+        <small>Published on {{ v.publishedAt | pretty_date }}</small>
+        <div><small>{{ v.description }}</small></div>
       </article>
 
       <hr />
@@ -77,7 +78,7 @@
           {% endif %}
           </div>
         {% endif %}
-        <a href="watch?v={{ video_id }}" class="button expand tiny">Back to video</a>
+        <a href="watch?v={{ v.video_id }}" class="button expand tiny">Back to video</a>
         <a href="#" id="export-modal-button" data-reveal-id="export-modal" class="button expand secondary tiny" disabled>Export comments <i class="fi-arrow-down"></i></a>
       </div>
 

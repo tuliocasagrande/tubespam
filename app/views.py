@@ -1,6 +1,6 @@
 from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.db.models import Count
 import json
 
@@ -9,11 +9,12 @@ import app.classification as classification
 import app.youtube_api as youtube_api
 
 DATE_FORMAT = "%a, %d %b %Y %H:%M:%S GMT"
+DATE_FORMAT_YT_API = '%Y-%m-%dT%H:%M:%S.%fZ'
 
 def index(request):
   #q = Video.objects.all()
   q = Comment.objects.values('video_id').annotate(num_comments=Count('id')).order_by('-num_comments')
-  youtube_api.search_by_ids(q)
+  youtube_api.append_to_query(q)
 
   return render(request, 'app/index.html', {'videos': q})
 
@@ -25,11 +26,16 @@ def watch(request):
   if not video_id:
     return redirect('index')
 
+  video_info = youtube_api.search_by_id(video_id)
+  if not video_info:
+    raise Http404('No Video matches the given query.')
+
+  video_info['publishedAt'] = datetime.strptime(video_info['publishedAt'], DATE_FORMAT_YT_API)
   comments = Comment.objects.filter(video_id=video_id).order_by('-date')
   spam_count = comments.filter(tag=True).count()
   ham_count = len(comments) - spam_count
 
-  output = {'video_id': video_id, 'comments': comments,
+  output = {'v': video_info, 'comments': comments,
             'spam_count': spam_count, 'ham_count': ham_count}
   return render(request, 'app/watch.html', output)
 
@@ -83,11 +89,17 @@ def classify(request):
     return redirect('index')
 
   video = get_object_or_404(Video, pk=video_id)
+
+  video_info = youtube_api.search_by_id(video_id)
+  if not video_info:
+    raise Http404('No Video matches the given query.')
+
+  video_info['publishedAt'] = datetime.strptime(video_info['publishedAt'], DATE_FORMAT_YT_API)
   comments = Comment.objects.filter(video_id=video_id).order_by('-date')
   spam_count = comments.filter(tag=True).count()
   ham_count = len(comments) - spam_count
 
-  output = {'video_id': video_id, 'len_error': False,
+  output = {'v': video_info, 'len_error': False,
             'spam_count': spam_count, 'ham_count': ham_count,
             'clf': classification.get_classifier(video_id)}
 

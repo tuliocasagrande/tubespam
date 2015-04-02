@@ -146,11 +146,10 @@ $(document).ready(function(){
   NEXT_URL = 'https://gdata.youtube.com/feeds/api/videos/'+ VIDEO_ID +
              '/comments?alt=json&max-results=50&orderby=published';
 
-  /* Retrieving first informations and checking if commenting is enable */
-  if (getVideoMeta(VIDEO_ID))
-    //getNewComments(nextHandler, total_length, spam_length, ham_length)
-    getNewComments(putNewComments, 1000, 20, 30);
+  //getNewComments(nextHandler, total_length, spam_length, ham_length)
+  getNewComments(putNewComments, 1000, 20, 30);
 
+  /* EVENTS */
   $('#comments').on('click', '.comment_tag', function() {
     var $this = $(this);
     if (!$this.attr('disabled')) {

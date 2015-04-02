@@ -4,7 +4,7 @@
           <a class="close-reveal-modal">&#215;</a>
 
           <form id="export-form" action='/export' method="post">{% csrf_token %}
-            <input type="hidden" name="v" value="{{ video_id }}">
+            <input type="hidden" name="v" value="{{ v.video_id }}">
             <div id="export-comments"></div>
 
             <p>1- Choose which comments will be exported:</p>

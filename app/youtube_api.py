@@ -6,7 +6,33 @@ DEVELOPER_KEY = os.environ['YOUTUBE_API_KEY']
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 
-def search_by_ids(query_list):
+def search_by_id(video_id):
+  try:
+    youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
+      developerKey=DEVELOPER_KEY)
+
+    search_response = youtube.videos().list(
+      part='id,snippet,statistics',
+      id=video_id
+    ).execute()
+
+    video_info = {}
+    if search_response.get('items', []):
+      search_result = search_response.get('items', [])[0]
+      video_info['video_id'] = video_id
+      video_info['title'] = search_result['snippet']['title']
+      video_info['description'] = search_result['snippet']['description']
+      video_info['channelTitle'] = search_result['snippet']['channelTitle']
+      video_info['publishedAt'] = search_result['snippet']['publishedAt']
+      video_info['viewCount'] = search_result['statistics']['viewCount']
+      video_info['commentCount'] = search_result['statistics']['commentCount']
+    return video_info
+
+  except HttpError, e:
+    print "An HTTP error %d occurred:\n%s" % (e.resp.status, e.content)
+
+
+def append_to_query(query_list):
   try:
     youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
       developerKey=DEVELOPER_KEY)

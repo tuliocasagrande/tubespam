@@ -44,7 +44,14 @@ function getNewComments(nextHandler, total_length, spam_length, ham_length) {
     type: 'GET',
     url: NEXT_URL,
     dataType: 'json'
-  }).fail(function() {
+  }).fail(function(data) {
+
+    if (data.responseText == 'Commenting is disabled for this video.') {
+      console.log(data.responseText);
+      $('#comments').append("<strong>Commenting were disabled for this video.</strong>");
+      $moreComments.remove();
+      return;
+    }
 
     // This usually happens when the api receives too many hits
     console.log('Something went wrong. Trying again in few seconds.');
@@ -71,34 +78,6 @@ function getNewComments(nextHandler, total_length, spam_length, ham_length) {
     }
 
     getNewComments(nextHandler, total_length, spam_length, ham_length);
-  });
-}
-
-function getVideoMeta(video_id) {
-  var url = 'https://gdata.youtube.com/feeds/api/videos/'+ video_id +'?alt=json';
-  $.ajax({
-    type: 'GET',
-    url: url,
-    dataType: 'json'
-  }).done(function(data){
-    document.title = data.entry.title.$t;
-    $('#video_title').html(data.entry.title.$t);
-    $('#video_publish_date').html('Published on ' + new Date(data.entry.published.$t).toUTCString());
-    $('#video_content').html(data.entry.content.$t);
-
-    $('#viewCount').html(formattedNumber(data.entry.yt$statistics.viewCount));
-
-    try {
-      var commentCount = data.entry.gd$comments.gd$feedLink.countHint;
-      $('#commentCount').html(formattedNumber(commentCount));
-      return true;
-    } catch(e) {
-      console.log(e);
-      $('#commentCount').html('Disabled!');
-      $('#comments').append("Comments were disabled for this video.");
-      $moreComments.remove();
-      return false;
-    }
   });
 }
 

@@ -248,8 +248,6 @@ $(document).ready(function(){
     TAGGED_COMMENTS[$(this).attr('comment_id')] = $(this).attr('comment_id');
   });
 
-  /* Retrieving first informations */
-  getVideoMeta(VIDEO_ID);
   NEXT_URL = 'https://gdata.youtube.com/feeds/api/videos/'+ VIDEO_ID +
              '/comments?alt=json&max-results=50&orderby=published';
 
