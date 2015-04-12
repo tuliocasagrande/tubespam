@@ -7,10 +7,8 @@
     <!-- Main Content -->
     <div class="large-8 columns" role="content">
       <article>
-        <div class="flex-video widescreen">
-          <iframe width="640" height="360" src="//www.youtube.com/embed/{{ v.video_id }}" frameborder="0" allowfullscreen></iframe>
-        </div>
-        <h3 id="video_title" video_id="{{ v.video_id }}">{{v.title}}</h3>
+        <div class="flex-video widescreen">{{ v.player | safe }}</iframe></div>
+        <h3 id="video_title" video_id="{{ v.video_id }}">{{ v.title }}</h3>
 
         <small>Published on {{ v.publishedAt | pretty_date }}</small>
         <div><small>{{ v.description }}</small></div>

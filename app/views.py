@@ -12,11 +12,22 @@ DATE_FORMAT = "%a, %d %b %Y %H:%M:%S GMT"
 DATE_FORMAT_YT_API = '%Y-%m-%dT%H:%M:%S.%fZ'
 
 def index(request):
-  #q = Video.objects.all()
-  q = Comment.objects.values('video_id').annotate(num_comments=Count('id')).order_by('-num_comments')
-  youtube_api.append_to_query(q)
+  query_set = Comment.objects.values('video_id').annotate(num_comments=Count('id')).order_by('-num_comments')[:4]
 
-  return render(request, 'app/index.html', {'videos': q})
+  d = dict(part='id,snippet,statistics',
+           id=','.join([video['video_id'] for video in query_set]))
+  classified_videos = youtube_api.get_videos_by_params(d)
+
+  for idx, each in enumerate(query_set):
+    each.update(classified_videos[idx])
+
+  d = dict(part='id,snippet,statistics',
+           chart='mostPopular',
+           maxResults=4)
+  yt_most_popular = youtube_api.get_videos_by_params(d)
+
+  return render(request, 'app/index.html',
+    {'classified_videos': query_set, 'yt_most_popular': yt_most_popular})
 
 def about(request):
   return render(request, 'app/about.html')
@@ -26,16 +37,17 @@ def watch(request):
   if not video_id:
     return redirect('index')
 
-  video_info = youtube_api.search_by_id(video_id)
-  if not video_info:
+  video_details = youtube_api.get_video_by_id(video_id)
+  if not video_details:
     raise Http404('No Video matches the given query.')
 
-  video_info['publishedAt'] = datetime.strptime(video_info['publishedAt'], DATE_FORMAT_YT_API)
+  video_details['publishedAt'] = datetime.strptime(video_details['publishedAt'], DATE_FORMAT_YT_API)
   comments = Comment.objects.filter(video_id=video_id).order_by('-date')
   spam_count = comments.filter(tag=True).count()
   ham_count = len(comments) - spam_count
 
-  output = {'v': video_info, 'comments': comments,
+  print video_details['player']
+  output = {'v': video_details, 'comments': comments,
             'spam_count': spam_count, 'ham_count': ham_count}
   return render(request, 'app/watch.html', output)
 
@@ -90,16 +102,16 @@ def classify(request):
 
   video = get_object_or_404(Video, pk=video_id)
 
-  video_info = youtube_api.search_by_id(video_id)
-  if not video_info:
+  video_details = youtube_api.get_video_by_id(video_id)
+  if not video_details:
     raise Http404('No Video matches the given query.')
 
-  video_info['publishedAt'] = datetime.strptime(video_info['publishedAt'], DATE_FORMAT_YT_API)
+  video_details['publishedAt'] = datetime.strptime(video_details['publishedAt'], DATE_FORMAT_YT_API)
   comments = Comment.objects.filter(video_id=video_id).order_by('-date')
   spam_count = comments.filter(tag=True).count()
   ham_count = len(comments) - spam_count
 
-  output = {'v': video_info, 'len_error': False,
+  output = {'v': video_details, 'len_error': False,
             'spam_count': spam_count, 'ham_count': ham_count,
             'clf': classification.get_classifier(video_id)}
 

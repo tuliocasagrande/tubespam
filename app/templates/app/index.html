@@ -4,10 +4,11 @@
 
 {% block content %}
 {% load humanize %}
+    {% if classified_videos %}
+    <h4>Most classified comments</h4>
     <div class="large-12 columns panel" role="content">
-    {% if videos %}
       <ul class="small-block-grid-4">
-      {% for v in videos %}
+      {% for v in classified_videos %}
         <li>
             <div class="lockup-thumbnail">
               <a href="/watch?v={{ v.video_id }}">
@@ -24,8 +25,29 @@
         </li>
       {% endfor %}
       </ul>
-    {% else %}
-      <h3>No videos available.</h3>
-    {% endif %}
     </div>
+    {% endif %}
+
+    {% if yt_most_popular %}
+    <h4>Most popular on YouTube</h4>
+    <div class="large-12 columns panel" role="content">
+      <ul class="small-block-grid-4">
+      {% for v in yt_most_popular %}
+        <li>
+            <div class="lockup-thumbnail">
+              <a href="/watch?v={{ v.video_id }}">
+                <img alt="{{ v.title }}" src="{{ v.thumbnail }}" width="196" height="110">
+              </a>
+            </div>
+            <div class="lockup-content">
+                <a href="/watch?v={{ v.video_id }}">{{ v.title }}</a>
+                <span>by {{v.channelTitle }}</span>
+                <span>{{v.viewCount | intcomma}} views</span>
+                <span>{{v.commentCount | intcomma}} comments</span>
+            </div>
+        </li>
+      {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
 {% endblock %}
