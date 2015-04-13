@@ -15,12 +15,12 @@
                 <img alt="{{ v.title }}" src="{{ v.thumbnail }}" width="196" height="110">
               </a>
             </div>
-            <div class="lockup-content">
-                <a href="/watch?v={{ v.video_id }}">{{ v.title }}</a>
-                <span>by {{v.channelTitle }}</span>
-                <span>{{v.viewCount | intcomma}} views</span>
-                <span>{{v.commentCount | intcomma}} comments</span>
-                <span>{{v.num_comments | intcomma}} classified comments</span>
+            <a class="lockup-title" href="/watch?v={{ v.video_id }}">{{ v.title }}</a>
+            <div class="lockup-meta">
+              <div>by {{ v.channelTitle }}</div>
+              <div>{{v.viewCount | intcomma}} views</div>
+              <div>{{v.commentCount | intcomma}} comments</div>
+              <div>{{v.num_comments | intcomma}} classified comments</div>
             </div>
         </li>
       {% endfor %}
@@ -39,11 +39,11 @@
                 <img alt="{{ v.title }}" src="{{ v.thumbnail }}" width="196" height="110">
               </a>
             </div>
-            <div class="lockup-content">
-                <a href="/watch?v={{ v.video_id }}">{{ v.title }}</a>
-                <span>by {{v.channelTitle }}</span>
-                <span>{{v.viewCount | intcomma}} views</span>
-                <span>{{v.commentCount | intcomma}} comments</span>
+            <a class="lockup-title" href="/watch?v={{ v.video_id }}">{{ v.title }}</a>
+            <div class="lockup-meta">
+              <div>by {{ v.channelTitle }}</div>
+              <div>{{v.viewCount | intcomma}} views</div>
+              <div>{{v.commentCount | intcomma}} comments</div>
             </div>
         </li>
       {% endfor %}

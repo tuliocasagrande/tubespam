@@ -8,6 +8,8 @@ urlpatterns = patterns('',
 
   # ex: /watch?v=12345678901
   url(r'^watch$', views.watch, name='watch'),
+  url(r'^spam$', views.spam, name='spam'),
+  url(r'^predictSpam$', views.predictSpam, name='predictSpam'),
 
   # ex: /classify?v=12345678901
   url(r'^classify$', views.classify, name='classify'),

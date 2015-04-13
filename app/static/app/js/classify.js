@@ -89,16 +89,16 @@ function retrainClassifier() {
   var $comments = $('#comments');
   var $classifiedComments = $('#classified_comments');
 
-  var $commentsChildrenManual = $comments.children('.comment[tag_type=manual]');
+  var $commentsChildrenManual = $comments.children('.comment[tag-type=manual]');
   $commentsChildrenManual.each(function() {
     $classifiedComments.append('<hr/>')
     $(this).appendTo($classifiedComments);
   });
 
   var newList = [];
-  var $commentsChildrenAutomatic = $comments.children('.comment[tag_type=automatic]');
+  var $commentsChildrenAutomatic = $comments.children('.comment[tag-type=automatic]');
   $commentsChildrenAutomatic.each(function() {
-    newComment = {comment_id: $(this).attr('comment_id'),
+    newComment = {comment_id: $(this).attr('comment-id'),
                   author: $(this).find('.comment_author').html(),
                   date: $(this).find('.comment_date').html(),
                   content: $(this).find('.comment_content').html()};
@@ -176,7 +176,7 @@ function suspiciousComment(content) {
 function saveComment(saveButton) {
   var $root = saveButton.parent().parent();
 
-  var comment_id = $root.attr('comment_id');
+  var comment_id = $root.attr('comment-id');
   var tag = saveButton.attr('tag');
   var content = $root.find('.comment_content').html();
   var author = $root.find('.comment_author').html();
@@ -201,7 +201,7 @@ function saveComment(saveButton) {
 
     if (tag == 'spam') {
       incrementCounter($spamCount);
-      if ($root.attr('tag_type') == 'manual') {
+      if ($root.attr('tag-type') == 'manual') {
         decrementCounter($hamCount);
       } else {
         incrementCounter($classifiedCount);
@@ -211,7 +211,7 @@ function saveComment(saveButton) {
 
     } else {
       incrementCounter($hamCount);
-      if ($root.attr('tag_type') == 'manual') {
+      if ($root.attr('tag-type') == 'manual') {
         decrementCounter($spamCount);
       } else {
         incrementCounter($classifiedCount);
@@ -222,7 +222,7 @@ function saveComment(saveButton) {
 
     saveButton.attr('disabled', true);
     sibling.removeAttr('disabled');
-    $root.attr('tag_type', 'manual');
+    $root.attr('tag-type', 'manual');
 
     console.log(num_untrd_comments);
     if (num_untrd_comments >= 5) {
@@ -242,10 +242,10 @@ function exportComments() {
 $(document).ready(function(){
   /* Initializing some global variables */
   CSRFTOKEN = $.cookie('csrftoken');
-  VIDEO_ID = $('#video_title').attr('video_id');
+  VIDEO_ID = $('#video-title').attr('video-id');
 
-  $('#classified_comments').children('.comment[tag_type=manual]').each(function() {
-    TAGGED_COMMENTS[$(this).attr('comment_id')] = $(this).attr('comment_id');
+  $('#classified_comments').children('.comment[tag-type=manual]').each(function() {
+    TAGGED_COMMENTS[$(this).attr('comment-id')] = $(this).attr('comment-id');
   });
 
   NEXT_URL = 'https://gdata.youtube.com/feeds/api/videos/'+ VIDEO_ID +
@@ -311,7 +311,7 @@ $(document).ready(function(){
       var exportAmount = $('#export-amount').val();
       if (exportAmount <= 0) exportAmount = 0;
 
-      var $commentsChildrenAutomatic = $('#comments').children('.comment[tag_type=automatic]');
+      var $commentsChildrenAutomatic = $('#comments').children('.comment[tag-type=automatic]');
       var newComment;
       var spam_length, ham_length;
       spam_length = ham_length = exportAmount;
@@ -326,7 +326,7 @@ $(document).ready(function(){
       /* Handling comments already displayed */
       $commentsChildrenAutomatic.each(function() {
 
-        newComment = {comment_id: $(this).attr('comment_id'),
+        newComment = {comment_id: $(this).attr('comment-id'),
                       author: $(this).find('.comment_author').html(),
                       date: $(this).find('.comment_date').html(),
                       content: $(this).find('.comment_content').html()};

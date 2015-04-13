@@ -9,7 +9,6 @@ import app.classification as classification
 import app.youtube_api as youtube_api
 
 DATE_FORMAT = "%a, %d %b %Y %H:%M:%S GMT"
-DATE_FORMAT_YT_API = '%Y-%m-%dT%H:%M:%S.%fZ'
 
 def index(request):
   query_set = Comment.objects.values('video_id').annotate(num_comments=Count('id')).order_by('-num_comments')[:4]
@@ -41,12 +40,10 @@ def watch(request):
   if not video_details:
     raise Http404('No Video matches the given query.')
 
-  video_details['publishedAt'] = datetime.strptime(video_details['publishedAt'], DATE_FORMAT_YT_API)
   comments = Comment.objects.filter(video_id=video_id).order_by('-date')
   spam_count = comments.filter(tag=True).count()
   ham_count = len(comments) - spam_count
 
-  print video_details['player']
   output = {'v': video_details, 'comments': comments,
             'spam_count': spam_count, 'ham_count': ham_count}
   return render(request, 'app/watch.html', output)
@@ -94,6 +91,54 @@ def retrieveVideo(video_id):
   return video
 
 
+def spam(request):
+  video_id = request.GET.get('v')
+  if not video_id:
+    return redirect('index')
+
+  video_details = youtube_api.get_video_by_id(video_id)
+  if not video_details:
+    raise Http404('No Video matches the given query.')
+
+  comments = Comment.objects.filter(video_id=video_id).order_by('-date')
+  spam_count = comments.filter(tag=True).count()
+  ham_count = len(comments) - spam_count
+
+  output = {'v': video_details, 'comments': comments,
+            'spam_count': spam_count, 'ham_count': ham_count}
+  return render(request, 'app/spam.html', output)
+
+def predictSpam(request):
+  output = '{'
+  if request.is_ajax():
+    if request.method == 'GET':
+      video_id = request.GET['v']
+      next_page_token = request.GET['next_page_token']
+      if next_page_token == 'None':
+        next_page_token = None
+
+      if classification.get_classifier(video_id):
+
+        spam = []
+        while len(spam) < 10:
+          unlabeled_comments, next_page_token = youtube_api.get_comment_threads(
+            video_id, next_page_token)
+          pred = classification.predict(video_id, unlabeled_comments)
+          for idx, each in enumerate(unlabeled_comments):
+            each['tag'] = pred[idx]
+          spam.extend([each for each in unlabeled_comments if each['tag'] == 1])
+
+        json_format = '"{0}":{{"author":{1},"date":"{2}","content":{3}}}'
+        output += ','.join([json_format.format(
+                              each['comment_id'],
+                              json.dumps(each['author']),
+                              each['publishedAt'].strftime(DATE_FORMAT),
+                              json.dumps(each['content']))
+                            for each in spam])
+
+  output += '}'
+  return HttpResponse(output)
+
 # With the API v2, this method just render the page
 def classify(request):
   video_id = request.GET.get('v')
@@ -106,7 +151,6 @@ def classify(request):
   if not video_details:
     raise Http404('No Video matches the given query.')
 
-  video_details['publishedAt'] = datetime.strptime(video_details['publishedAt'], DATE_FORMAT_YT_API)
   comments = Comment.objects.filter(video_id=video_id).order_by('-date')
   spam_count = comments.filter(tag=True).count()
   ham_count = len(comments) - spam_count

@@ -15,6 +15,13 @@
   }
 }
 
+#video-details {
+  border: solid #ccc;
+  border-width: 0 0 1px;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+}
+
 .comment_tag, .comment_content, #export-button {
  margin-bottom: 0px;
 }
@@ -31,8 +38,16 @@
   padding-left: 0;
 }
 
-#comments, #classified_comments {
+.comment {
   word-wrap: break-word;
+}
+
+.comment_content, .lockup-title {
+  font-size: 13px;
+}
+
+.lockup-meta {
+  font-size: 11px;
 }
 
 .loading-icon {

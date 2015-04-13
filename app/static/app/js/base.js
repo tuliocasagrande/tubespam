@@ -3,7 +3,7 @@
 function formattedComment(comment_id, author, date, content, tag, tag_type) {
   tag_type = typeof tag_type !== 'undefined' ? tag_type : '';
 
-  var comment = '<div class="comment row" tag_type="'+ tag_type +'" comment_id="'+ comment_id +'">' +
+  var comment = '<div class="comment-row row" tag-type="'+ tag_type +'" comment-id="'+ comment_id +'">' +
                 '<p class="comment_header small-12 columns">' +
                 '<strong class="comment_author">'+ author +'</strong>'+
                 '<a href="https://www.youtube.com/all_comments?v='+ VIDEO_ID +'&google_comment_id='+comment_id+'" target="_blank">' +

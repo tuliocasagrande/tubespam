@@ -9,7 +9,7 @@
     <!-- Main Content -->
     <div class="large-8 columns" role="content">
       <article>
-        <h3 id="video_title" video_id="{{ v.video_id }}">{{v.title}}</h3>
+        <h3 id="video-title" video-id="{{ v.video_id }}">{{v.title}}</h3>
 
         <small>Published on {{ v.publishedAt | pretty_date }}</small>
         <div><small>{{ v.description }}</small></div>
@@ -35,7 +35,7 @@
       <div id="comments">
         <h3>Prediction</h3><hr/>
       {% for c, p in prediction %}
-        <div class="comment row" tag_type="automatic" comment_id="{{ c }}">
+        <div class="comment-row row" tag-type="automatic" comment-id="{{ c }}">
           <p class="content small-9 columns">{{ c }}</p>
           <div class="small-3 columns">
           {% if p %}

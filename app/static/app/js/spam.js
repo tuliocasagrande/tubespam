@@ -1,29 +1,26 @@
 var VIDEO_ID;
 var CSRFTOKEN;
-var TAGGED_COMMENTS = {};
-var SUSPICIOUS_SPAM = [];
-var SUSPICIOUS_HAM = [];
-var NEXT_URL;
+var CLASSIFIED_COMMENTS = {};
+var NEXT_PAGE_TOKEN;
 
-var TAG = '<div class="small-3 columns">' +
-          '<span class="comment_tag right tiny secondary button spam" tag="spam">Spam</span>' +
-          '<span class="comment_tag right tiny secondary button ham" tag="ham">Ham</span>' +
+var BUTTON = 'comment_tag right tiny secondary button';
+var SPAM_TAG = '<div class="tag_column small-3 columns">' +
+          '<span class="'+ BUTTON +' alert spam" disabled tag="spam">Spam</span>' +
+          '<span class="'+ BUTTON +' ham" tag="ham">Ham</span>' +
           '</div>';
 
-var $moreComments = $('#moreComments');
+var $moreComments = $('#more-comments');
 var $classifiedCount = $('.classifiedCount');
 var $spamCount = $('#spamCount');
 var $hamCount = $('#hamCount');
 
-function lockMoreCommentsButton() {
-  $moreComments.html('Loading ...');
-  $moreComments.addClass('loading-icon');
-  $moreComments.attr('disabled', true);
+function lockLoadingButton($loadingButton) {
+  $loadingButton.addClass('loading-icon');
+  $loadingButton.attr('disabled', true);
 }
-function unlockMoreCommentsButton() {
-  $moreComments.html('Show more comments <i class="fi-refresh"></i>');
-  $moreComments.removeClass('loading-icon');
-  $moreComments.removeAttr('disabled');
+function unlockLoadingButton($loadingButton) {
+  $loadingButton.removeClass('loading-icon');
+  $loadingButton.removeAttr('disabled');
 }
 
 function incrementCounter($counter) {
@@ -55,22 +52,10 @@ function appendToHtml(list, count) {
 
   for (var i = 0; i < len; i++) {
     newComment = list.shift();
-    $('#comments').append(formattedComment(
+    $('#new-comments').append(formattedComment(
       newComment.comment_id, newComment.author, newComment.date,
       newComment.content, TAG, 'unclassified'));
   }
-}
-
-function suspiciousComment(content) {
-  var fixed = content.replace(/ /g,'').toLowerCase();
-
-  if (fixed.indexOf('visit') != -1 || fixed.indexOf('.co') != -1 ||
-      fixed.indexOf('http') != -1 || fixed.indexOf('buy') != -1 ||
-      fixed.indexOf('check') != -1 || fixed.indexOf('channel') != -1 ||
-      fixed.indexOf('site') != -1 || fixed.indexOf('subscrib') != -1) {
-    return true;
-  }
-  return false;
 }
 
 function saveComment(saveButton) {
@@ -134,23 +119,52 @@ function saveComment(saveButton) {
   });
 }
 
+function predictSpam() {
+  $.ajax({
+    type: 'GET',
+    url: '/predictSpam',
+    headers: {'X-CSRFToken': CSRFTOKEN},
+    data: { v: VIDEO_ID, next_page_token: NEXT_PAGE_TOKEN },
+    dataType: 'json'
+  }).fail(function(data) {
+    $moreComments.remove();
+    console.log('ERROR! The server did\'t return a correct JSON.');
+    console.log(data.responseText);
+    console.log(data);
+  }).done(function(data) {
+    for (var key in data) {
+      $('#new-comments').append(formattedComment(
+                            key, data[key].author, data[key].date,
+                            data[key].content, SPAM_TAG, 'automatic'));
+    }
+
+    // if (SUSPICIOUS_SPAM.length == 0 && SUSPICIOUS_HAM.length == 0 &&
+    //   NEXT_URL == null) {
+    //   $moreComments.remove();
+    // } else {
+      $moreComments.html('Show more comments <i class="fi-refresh"></i>');
+      unlockLoadingButton($moreComments);
+      $('#export-modal-button').removeAttr('disabled');
+    // }
+  });
+}
+
 $(document).ready(function(){
   /* Initializing some global variables */
   CSRFTOKEN = $.cookie('csrftoken');
   VIDEO_ID = $('#video-title').attr('video-id');
 
-  $('#comments').children('.comment[tag-type=manual]').each(function() {
-    TAGGED_COMMENTS[$(this).attr('comment-id')] = $(this).attr('comment-id');
+  $('#classified-comments').children('.comment-row[tag-type=manual]').each(function() {
+    CLASSIFIED_COMMENTS[$(this).attr('comment-id')] = $(this).attr('comment-id');
   });
 
-  NEXT_URL = 'https://gdata.youtube.com/feeds/api/videos/'+ VIDEO_ID +
-             '/comments?alt=json&max-results=50&orderby=published';
-
   //getNewComments(nextHandler, total_length, spam_length, ham_length)
-  getNewComments(putNewComments, 1000, 20, 30);
+  //getNewComments(putNewComments, 1000, 20, 30);
+  NEXT_PAGE_TOKEN = 'None'
+  predictSpam();
 
   /* EVENTS */
-  $('#comments').on('click', '.comment_tag', function() {
+  $('.comments').on('click', '.comment_tag', function() {
     var $this = $(this);
     if (!$this.attr('disabled')) {
       saveComment($this);
@@ -158,11 +172,11 @@ $(document).ready(function(){
     return false;
   });
 
-  $('#moreComments').click(function() {
+  $('#more-comments').click(function() {
     if (!$(this).attr('disabled')) {
       console.log('More comments...');
 
-      if (NEXT_URL != null) {
+      if (NEXT_PAGE_TOKEN != null) {
         lockMoreCommentsButton();
         getNewComments(putNewComments, 1000, 20, 30);
       } else {
@@ -171,23 +185,5 @@ $(document).ready(function(){
     }
 
     return false;
-  });
-
-  $('#classify-button').click(function(event) {
-    if ($(this).attr('disabled')) {
-      event.preventDefault();
-    }
-  });
-
-  $('#hide-spam-button').click(function(event) {
-    if ($(this).attr('action') == 'hide') {
-      $('#comments').find('.comment_tag[tag=spam][disabled]').parent().parent().fadeOut(1);
-      $(this).attr('action', 'show');
-      $(this).html('Show spam');
-    } else {
-      $('#comments').find('.comment_tag[tag=spam][disabled]').parent().parent().fadeIn(1);
-      $(this).attr('action', 'hide');
-      $(this).html('Hide spam');
-    }
   });
 });

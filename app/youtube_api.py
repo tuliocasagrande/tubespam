@@ -1,11 +1,14 @@
 import os
 from apiclient.discovery import build
 from apiclient.errors import HttpError
+from datetime import datetime
 
 DEVELOPER_KEY = os.environ['YOUTUBE_API_KEY']
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
+DATE_FORMAT_YT_API = '%Y-%m-%dT%H:%M:%S.%fZ'
 
+# Call the videos.list method to retrieve details for the given video_id.
 def get_video_by_id(video_id):
   try:
     youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
@@ -17,14 +20,15 @@ def get_video_by_id(video_id):
     ).execute()
 
     video_details = {}
-    if search_response.get('items', []):
-      search_result = search_response.get('items', [])[0]
+    if 'items' in search_response:
+      search_result = search_response['items'][0]
       video_details['video_id'] = video_id
       video_details['player'] = search_result['player']['embedHtml']
       video_details['title'] = search_result['snippet']['title']
       video_details['description'] = search_result['snippet']['description']
       video_details['channelTitle'] = search_result['snippet']['channelTitle']
-      video_details['publishedAt'] = search_result['snippet']['publishedAt']
+      video_details['publishedAt'] = datetime.strptime(
+        search_result['snippet']['publishedAt'], DATE_FORMAT_YT_API)
       video_details['viewCount'] = search_result['statistics']['viewCount']
       video_details['commentCount'] = search_result['statistics']['commentCount']
     return video_details
@@ -33,6 +37,7 @@ def get_video_by_id(video_id):
     print "An HTTP error %d occurred:\n%s" % (e.resp.status, e.content)
 
 
+# Call the videos.list method to retrieve details for each video.
 def get_videos_by_params(params):
   try:
     youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
@@ -51,6 +56,35 @@ def get_videos_by_params(params):
       video_details['commentCount'] =  search_result['statistics']['commentCount']
       video_list_details.append(video_details)
     return video_list_details
+
+  except HttpError, e:
+    print "An HTTP error %d occurred:\n%s" % (e.resp.status, e.content)
+
+# Call the commentThreads.list method to retrieve comments of the given video_id.
+def get_comment_threads(video_id, next_page_token=None):
+  try:
+    youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
+      developerKey=DEVELOPER_KEY)
+
+    search_response = youtube.commentThreads().list(
+      part='id,snippet',
+      videoId=video_id,
+      maxResults=100,
+      pageToken=next_page_token
+    ).execute()
+
+    comments_list = []
+    for search_result in search_response.get('items', []):
+      comment = {}
+      comment['comment_id'] = search_result['id']
+      top_lvl_comment = search_result["snippet"]["topLevelComment"]
+      comment['author'] = top_lvl_comment["snippet"]["authorDisplayName"]
+      comment['content'] = top_lvl_comment["snippet"]["textDisplay"]
+      comment['publishedAt'] = datetime.strptime(
+        top_lvl_comment['snippet']['publishedAt'], DATE_FORMAT_YT_API)
+      comments_list.append(comment)
+
+    return comments_list, search_response['nextPageToken']
 
   except HttpError, e:
     print "An HTTP error %d occurred:\n%s" % (e.resp.status, e.content)

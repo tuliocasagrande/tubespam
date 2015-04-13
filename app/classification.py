@@ -96,6 +96,10 @@ def predict(video_id, unlabeled_comments):
   vectorizer = joblib.load(os.path.join('app', 'classification_files', video_id+'_vct'))
   clf = joblib.load(os.path.join('app', 'classification_files', video_id+'_clf'))
 
-  contents = [c.content for c in unlabeled_comments]
+  if unlabeled_comments and type(unlabeled_comments[0]) == dict:
+    contents = [c['content'] for c in unlabeled_comments]
+  else:
+    contents = [c.content for c in unlabeled_comments]
+
   X = vectorizer.transform(contents)
   return clf.predict(X)
