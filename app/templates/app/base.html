@@ -4,11 +4,11 @@
   <title>{% block title %}Tubespam{% endblock %}</title>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   {% load staticfiles %}
-  <link rel="stylesheet" href="{% static 'app/css/normalize.css' %}" />
-  <link rel="stylesheet" href="{% static 'app/css/foundation.min.css' %}" />
-  <link rel="stylesheet" href="{% static 'app/css/foundation-icons/foundation-icons.css' %}" />
-  <link rel="stylesheet" href="{% static 'app/css/base.css' %}" />
-  <script src="{% static 'app/js/vendor/modernizr.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'css/normalize.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/foundation.min.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/foundation-icons/foundation-icons.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+  <script src="{% static 'js/vendor/modernizr.js' %}"></script>
 </head>
 <body>
   <!-- Nav Bar -->
@@ -52,10 +52,10 @@
 
   {% block js %}
   <!-- JS (Placed at the end of the document so the pages load faster) -->
-  <script src="{% static 'app/js/vendor/jquery.js' %}"></script>
-  <script src="{% static 'app/js/vendor/fastclick.js' %}"></script>
-  <script src="{% static 'app/js/vendor/jquery.cookie.js' %}"></script>
-  <script src="{% static 'app/js/foundation.min.js' %}"></script>
+  <script src="{% static 'js/vendor/jquery.js' %}"></script>
+  <script src="{% static 'js/vendor/fastclick.js' %}"></script>
+  <script src="{% static 'js/vendor/jquery.cookie.js' %}"></script>
+  <script src="{% static 'js/foundation.min.js' %}"></script>
   {% endblock %}
 </body>
 </html>
