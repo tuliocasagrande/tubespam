@@ -35,9 +35,9 @@
         {% include "app/commonSummary.html" %}
 
         {% if spam_count < 10 or ham_count < 10 %}
-        <a href="classify?v={{ v.video_id }}" id="classify-button" class="button expand tiny" disabled>Classify</a>
+        <a href="{% url 'classify' %}?v={{ v.video_id }}" id="classify-button" class="button expand tiny" disabled>Classify</a>
         {% else %}
-        <a href="classify?v={{ v.video_id }}" id="classify-button" class="button expand tiny">Classify</a>
+        <a href="{% url 'classify' %}?v={{ v.video_id }}" id="classify-button" class="button expand tiny">Classify</a>
         {% endif %}
         <button class="tiny" id="hide-spam-button" action="hide">Hide spam</button>
       </div>

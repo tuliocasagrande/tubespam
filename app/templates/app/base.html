@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>{% block title %}Tubespam{% endblock %}</title>
+  <title>{% block title %}TubeSpam{% endblock %}</title>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   {% load staticfiles %}
   <link rel="stylesheet" href="{% static 'css/normalize.css' %}" />
@@ -16,11 +16,11 @@
     <div class="large-12 columns">
       <div class="nav-bar right">
        <ul class="button-group">
-         <li><a href="/" class="button secondary">Home</a></li>
-         <li><a href="/about" class="button secondary">About</a></li>
+         <li><a href="{% url 'index' %}" class="button secondary">Home</a></li>
+         <li><a href="{% url 'about' %}" class="button secondary">About</a></li>
         </ul>
       </div>
-      <h1>Tubespam <small>UFSCar Sorocaba</small></h1>
+      <h1>TubeSpam</h1>
       <hr />
     </div>
   </div>
@@ -42,8 +42,8 @@
         </div>
         <div class="large-6 columns">
           <ul class="inline-list right">
-            <li><a href="/">Home</a></li>
-            <li><a href="/about">About</a></li>
+            <li><a href="{% url 'index' %}">Home</a></li>
+            <li><a href="{% url 'about' %}">About</a></li>
           </ul>
         </div>
       </div>

@@ -78,7 +78,7 @@
           {% endif %}
           </div>
         {% endif %}
-        <a href="watch?v={{ v.video_id }}" class="button expand tiny">Back to video</a>
+        <a href="{% url 'watch' %}?v={{ v.video_id }}" class="button expand tiny">Back to video</a>
         <a href="#" id="export-modal-button" data-reveal-id="export-modal" class="button expand secondary tiny" disabled>Export comments <i class="fi-arrow-down"></i></a>
       </div>
 

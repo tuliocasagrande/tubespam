@@ -11,11 +11,11 @@
       {% for v in classified_videos %}
         <li>
             <div class="lockup-thumbnail">
-              <a href="/watch?v={{ v.video_id }}">
+              <a href="{% url 'watch' %}?v={{ v.video_id }}">
                 <img alt="{{ v.title }}" src="{{ v.thumbnail }}" width="196" height="110">
               </a>
             </div>
-            <a class="lockup-title" href="/watch?v={{ v.video_id }}">{{ v.title }}</a>
+            <a class="lockup-title" href="{% url 'watch' %}?v={{ v.video_id }}">{{ v.title }}</a>
             <div class="lockup-meta">
               <div>by {{ v.channelTitle }}</div>
               <div>{{v.viewCount | intcomma}} views</div>
@@ -35,11 +35,11 @@
       {% for v in yt_most_popular %}
         <li>
             <div class="lockup-thumbnail">
-              <a href="/watch?v={{ v.video_id }}">
+              <a href="{% url 'watch' %}?v={{ v.video_id }}">
                 <img alt="{{ v.title }}" src="{{ v.thumbnail }}" width="196" height="110">
               </a>
             </div>
-            <a class="lockup-title" href="/watch?v={{ v.video_id }}">{{ v.title }}</a>
+            <a class="lockup-title" href="{% url 'watch' %}?v={{ v.video_id }}">{{ v.title }}</a>
             <div class="lockup-meta">
               <div>by {{ v.channelTitle }}</div>
               <div>{{v.viewCount | intcomma}} views</div>
