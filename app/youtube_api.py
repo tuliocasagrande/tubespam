@@ -3,7 +3,7 @@ from apiclient.discovery import build
 from apiclient.errors import HttpError
 from datetime import datetime
 
-DEVELOPER_KEY = os.environ['YOUTUBE_API_KEY']
+DEVELOPER_KEY = os.environ['TS_YOUTUBE_API_KEY']
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 DATE_FORMAT_YT_API = '%Y-%m-%dT%H:%M:%S.%fZ'

@@ -16,7 +16,7 @@ TEMPLATE_DIRS = [os.path.join(BASE_DIR, 'templates')]
 # Static asset configuration
 PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
 STATIC_ROOT = 'staticfiles'
-STATIC_URL = '/static/'
+STATIC_URL = '/tubespam/static/'
 
 STATICFILES_DIRS = [os.path.join(PROJECT_PATH, 'static')]
 
@@ -24,7 +24,7 @@ STATICFILES_DIRS = [os.path.join(PROJECT_PATH, 'static')]
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
+SECRET_KEY = os.environ['TS_SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -69,7 +69,7 @@ WSGI_APPLICATION = 'tubespam.wsgi.application'
 # Parse database configuration from $DATABASE_URL
 import dj_database_url
 DATABASES = {
-    'default': dj_database_url.config()
+    'default': dj_database_url.config(default=os.environ['TS_DATABASE_URL'])
 }
 
 
