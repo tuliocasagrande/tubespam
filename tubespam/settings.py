@@ -15,7 +15,7 @@ TEMPLATE_DIRS = [os.path.join(BASE_DIR, 'templates')]
 
 # Static asset configuration
 PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
-STATIC_ROOT = 'staticfiles'
+STATIC_ROOT = '/var/www/tubespam/static'
 STATIC_URL = '/tubespam/static/'
 
 STATICFILES_DIRS = [os.path.join(PROJECT_PATH, 'static')]
