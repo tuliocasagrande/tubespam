@@ -1,6 +1,6 @@
 {% extends "app/base.html" %}
 
-{% block title %}{{v.title}}{% endblock %}
+{% block title %}{{v.title}} · TubeSpam{% endblock %}
 
 {% block content %}
     {% load pretty_date %}
@@ -19,7 +19,7 @@
 
       <div id="comments">
       {% for c in comments %}
-        {% include "app/commentRow.html" %}
+        {% include "app/_commentRow.html" %}
         <hr/>
       {% endfor %}
       </div>
@@ -32,7 +32,7 @@
     <aside class="large-4 columns">
       <div id="summary" class="panel">
         <h4>Summary</h4>
-        {% include "app/commonSummary.html" %}
+        {% include "app/_commonSummary.html" %}
 
         {% if spam_count < 10 or ham_count < 10 %}
         <a href="{% url 'classify' %}?v={{ v.video_id }}" id="classify-button" class="button expand tiny" disabled>Classify</a>
@@ -46,15 +46,7 @@
 {% endblock %}
 
 {% block js %}
-  <!-- JS (Placed at the end of the document so the pages load faster) -->
   {% load staticfiles %}
-  <script src="{% static 'js/vendor/jquery.js' %}"></script>
-  <script src="{% static 'js/vendor/fastclick.js' %}"></script>
-  <script src="{% static 'js/vendor/jquery.cookie.js' %}"></script>
-  <script src="{% static 'js/foundation.min.js' %}"></script>
-  <script src="{% static 'js/base.js' %}" type="text/javascript"></script>
-  <script src="{% static 'js/watch.js' %}" type="text/javascript"></script>
-  <script>
-    $(document).foundation();
-  </script>
+  <script src="{% static 'app/js/common.js' %}" type="text/javascript"></script>
+  <script src="{% static 'app/js/watch.js' %}" type="text/javascript"></script>
 {% endblock %}

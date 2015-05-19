@@ -1,6 +1,6 @@
 {% extends "app/base.html" %}
 
-{% block title %}{% endblock %}
+{% block title %}Classify · TubeSpam{% endblock %}
 
 {% block content %}
     {% load humanize %}
@@ -25,7 +25,7 @@
       <h3>Labeled Comments</h3>
       <div id="classified_comments" class="panel callout radius">
       {% for c in comments %}
-        {% include "app/commentRow.html" %}
+        {% include "app/_commentRow.html" %}
         {% if not forloop.last %}
         <hr/>
         {% endif %}
@@ -60,7 +60,7 @@
     <aside class="large-4 columns">
       <div id="summary" class="panel">
         <h4>Summary</h4>
-        {% include "app/commonSummary.html" %}
+        {% include "app/_commonSummary.html" %}
 
         {% if not len_error %}
           <div id="clf-info">
@@ -84,19 +84,11 @@
 
     </aside>
     <!-- End Sidebar -->
-    {% include "app/exportModal.html" %}
+    {% include "app/_exportModal.html" %}
 {% endblock %}
 
 {% block js %}
-  <!-- JS (Placed at the end of the document so the pages load faster) -->
   {% load staticfiles %}
-  <script src="{% static 'js/vendor/jquery.js' %}"></script>
-  <script src="{% static 'js/vendor/fastclick.js' %}"></script>
-  <script src="{% static 'js/vendor/jquery.cookie.js' %}"></script>
-  <script src="{% static 'js/foundation.min.js' %}"></script>
-  <script src="{% static 'js/base.js' %}" type="text/javascript"></script>
-  <script src="{% static 'js/classify.js' %}" type="text/javascript"></script>
-  <script>
-    $(document).foundation();
-  </script>
+  <script src="{% static 'app/js/common.js' %}" type="text/javascript"></script>
+  <script src="{% static 'app/js/classify.js' %}" type="text/javascript"></script>
 {% endblock %}
