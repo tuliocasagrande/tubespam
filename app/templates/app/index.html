@@ -4,9 +4,10 @@
 
 {% block content %}
 {% load humanize %}
+  <div class="large-12 columns">
     {% if classified_videos %}
     <h4>Most classified comments</h4>
-    <div class="large-12 columns panel" role="content">
+    <div class="panel" role="content">
       <ul class="small-block-grid-4">
       {% for v in classified_videos %}
         <li>
@@ -30,7 +31,7 @@
 
     {% if yt_most_popular %}
     <h4>Most popular on YouTube</h4>
-    <div class="large-12 columns panel" role="content">
+    <div class="panel" role="content">
       <ul class="small-block-grid-4">
       {% for v in yt_most_popular %}
         <li>
@@ -50,4 +51,5 @@
       </ul>
     </div>
     {% endif %}
+  </div>
 {% endblock %}

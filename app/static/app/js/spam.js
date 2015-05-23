@@ -69,7 +69,7 @@ function saveComment(saveButton) {
 
   $.ajax({
     type: 'POST',
-    url: '/saveComment',
+    url: saveComment_ajax_url,
     headers: {'X-CSRFToken': CSRFTOKEN},
     data: {comment_id: comment_id,
         video_id: VIDEO_ID,
@@ -122,7 +122,7 @@ function saveComment(saveButton) {
 function predictSpam() {
   $.ajax({
     type: 'GET',
-    url: '/predictSpam',
+    url: predictSpam_ajax_url,
     headers: {'X-CSRFToken': CSRFTOKEN},
     data: { v: VIDEO_ID, next_page_token: NEXT_PAGE_TOKEN },
     dataType: 'json'

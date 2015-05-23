@@ -51,7 +51,7 @@ function sendToClassifier() {
 
   $.ajax({
     type: 'POST',
-    url: '/train',
+    url: train_ajax_url,
     headers: {'X-CSRFToken': CSRFTOKEN},
     data: { v: VIDEO_ID, 'comments[]': comments },
     dataType: 'json'
@@ -110,7 +110,7 @@ function retrainClassifier() {
 
   $.ajax({
     type: 'POST',
-    url: '/train',
+    url: train_ajax_url,
     headers: {'X-CSRFToken': CSRFTOKEN},
     data: { v: VIDEO_ID, 'comments[]': newList },
     dataType: 'json'
@@ -135,7 +135,7 @@ function retrainClassifier() {
 function reloadClassifierInfo() {
   $.ajax({
     type: 'GET',
-    url: '/reloadClassifierInfo',
+    url: reloadClassifierInfo_ajax_url,
     data: { v: VIDEO_ID },
     dataType: 'html'
   }).done(function(data) {
@@ -184,7 +184,7 @@ function saveComment(saveButton) {
 
   $.ajax({
     type: 'POST',
-    url: '/saveComment',
+    url: saveComment_ajax_url,
     headers: {'X-CSRFToken': CSRFTOKEN},
     data: {comment_id: comment_id,
         video_id: VIDEO_ID,

@@ -84,7 +84,7 @@ function saveComment(saveButton) {
 
   $.ajax({
     type: 'POST',
-    url: '/saveComment',
+    url: saveComment_ajax_url,
     headers: {'X-CSRFToken': CSRFTOKEN},
     data: {comment_id: comment_id,
         video_id: VIDEO_ID,
