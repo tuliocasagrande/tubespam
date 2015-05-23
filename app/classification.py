@@ -54,7 +54,7 @@ def fit(video_id, comments, unlabeled_comments):
   # Semi-supervised clf with merged manually classified and unlabeled comments
 
   param_grid = {'gamma': range5}
-  ss_grid = GridSearchCV(LabelSpreading(kernel='rbf'), param_grid, cv=10).fit(X, y)
+  ss_grid = GridSearchCV(LabelSpreading(kernel='rbf'), param_grid, cv=10).fit(X.toarray(), y)
 
   # Predicting classes and probabilities of unlabeled comments
   unlabeled_X = vectorizer.transform(unlabeled_contents)
