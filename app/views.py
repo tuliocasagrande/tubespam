@@ -11,10 +11,9 @@ import app.youtube_api as youtube_api
 DATE_FORMAT = "%a, %d %b %Y %H:%M:%S GMT"
 
 def index(request):
-  query_set = Comment.objects.values('video_id').annotate(num_comments=Count('id')).order_by('-num_comments')[:4]
-
+  query_set = Comment.objects.values('video').annotate(num_comments=Count('id')).order_by('-num_comments')[:4]
   d = dict(part='id,snippet,statistics',
-           id=','.join([video['video_id'] for video in query_set]))
+           id=','.join([query['video'] for query in query_set]))
   classified_videos = youtube_api.get_videos_by_params(d)
 
   for idx, each in enumerate(query_set):
@@ -40,7 +39,7 @@ def watch(request):
   if not video_details:
     raise Http404('No Video matches the given query.')
 
-  comments = Comment.objects.filter(video_id=video_id).order_by('-date')
+  comments = Comment.objects.filter(video=video_id).order_by('-date')
   spam_count = comments.filter(tag=True).count()
   ham_count = len(comments) - spam_count
 
@@ -68,7 +67,7 @@ def saveComment(request):
   try:
     comment = Comment.objects.get(id=comment_id)
   except Comment.DoesNotExist:
-    comment = Comment(id=comment_id, author=author, date=date, video_id=video, content=content)
+    comment = Comment(id=comment_id, author=author, date=date, video=video, content=content)
 
   if tag == 'spam':
     comment.tag = True
@@ -100,7 +99,7 @@ def spam(request):
   if not video_details:
     raise Http404('No Video matches the given query.')
 
-  comments = Comment.objects.filter(video_id=video_id).order_by('-date')
+  comments = Comment.objects.filter(video=video_id).order_by('-date')
   spam_count = comments.filter(tag=True).count()
   ham_count = len(comments) - spam_count
 
@@ -151,7 +150,7 @@ def classify(request):
   if not video_details:
     raise Http404('No Video matches the given query.')
 
-  comments = Comment.objects.filter(video_id=video_id).order_by('-date')
+  comments = Comment.objects.filter(video=video_id).order_by('-date')
   spam_count = comments.filter(tag=True).count()
   ham_count = len(comments) - spam_count
 
@@ -189,7 +188,7 @@ def train(request):
       video_id = request.POST['v']
       video = Video.objects.get(id=video_id)
       unlabeled_comments = prepareNewComments(request.POST.getlist('comments[]'))
-      comments = Comment.objects.filter(video_id=video_id)
+      comments = Comment.objects.filter(video=video_id)
       spam_count = comments.filter(tag=True).count()
       ham_count = len(comments) - spam_count
       clf = classification.get_classifier(video_id)
@@ -235,7 +234,7 @@ def export(request):
     return redirect('index')
 
   exportOption = request.POST.get('export-option')
-  comments = Comment.objects.filter(video_id=video_id).order_by('date')
+  comments = Comment.objects.filter(video=video_id).order_by('date')
 
   csv_format = '{0},"{1}","{2}","{3}",{4}\n'
   csv = 'COMMENT_ID,AUTHOR,DATE,CONTENT,TAG\n'
