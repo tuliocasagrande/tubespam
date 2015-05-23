@@ -109,3 +109,16 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = False
+
+
+# Email configuration
+ADMINS = (('Tulio', os.environ['TS_ADMIN_MAIL']), )
+SERVER_EMAIL = 'lasid.sor.ufscar.br/tubespam'
+DEFAULT_FROM_EMAIL = 'lasid.sor.ufscar.br/tubespam'
+
+# SendGrid configuration
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST_USER = os.environ['TS_SENDGRID_USR']
+EMAIL_HOST_PASSWORD = os.environ['TS_SENDGRID_PWD']
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
