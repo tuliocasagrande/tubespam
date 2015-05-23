@@ -1,4 +1,4 @@
 venv/
 *.pyc
 /static/
-app/classification_files
+tubespam_classification_files

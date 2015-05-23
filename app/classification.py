@@ -6,12 +6,14 @@ from sklearn.grid_search import GridSearchCV
 from sklearn.semi_supervised import LabelSpreading
 from sklearn.svm import LinearSVC
 
+CLASSIFICATION_FILES_DIR = 'tubespam_classification_files'
+
 def get_classifier(video_id):
   """ Return the stored classifier of the given video_id.
       Return None if the video has yet to be classified.
   """
   try:
-    return joblib.load(os.path.join('app', 'classification_files', video_id+'_clf'))
+    return joblib.load(os.path.join(CLASSIFICATION_FILES_DIR, video_id+'_clf'))
   except:
     return None
 
@@ -29,8 +31,8 @@ def fit(video_id, comments, unlabeled_comments):
       unlabeled_comments = [Comment(id, author, date, content)]
   """
 
-  if not os.path.exists(os.path.join('app', 'classification_files')):
-    os.makedirs(os.path.join('app', 'classification_files'))
+  if not os.path.exists(CLASSIFICATION_FILES_DIR):
+    os.makedirs(CLASSIFICATION_FILES_DIR)
 
   # Semi-supervised will at most double the training set
   unlabeled_comments = unlabeled_comments[: len(comments)]
@@ -76,8 +78,8 @@ def fit(video_id, comments, unlabeled_comments):
   svm_grid = GridSearchCV(LinearSVC(), param_grid, cv=10).fit(X, y)
 
   # Saving vectorizer & classifier
-  joblib.dump(vectorizer, os.path.join('app', 'classification_files', video_id+'_vct'))
-  joblib.dump(svm_grid.best_estimator_, os.path.join('app', 'classification_files', video_id+'_clf'))
+  joblib.dump(vectorizer, os.path.join(CLASSIFICATION_FILES_DIR, video_id+'_vct'))
+  joblib.dump(svm_grid.best_estimator_, os.path.join(CLASSIFICATION_FILES_DIR, video_id+'_clf'))
 
   # Array with accuracies achieved by cross-validation
   for parameters, mean_validation_score, cv_validation_scores in svm_grid.grid_scores_:
@@ -93,8 +95,8 @@ def predict(video_id, unlabeled_comments):
       unlabeled_comments = [Comment(id, author, date, content)]
   """
 
-  vectorizer = joblib.load(os.path.join('app', 'classification_files', video_id+'_vct'))
-  clf = joblib.load(os.path.join('app', 'classification_files', video_id+'_clf'))
+  vectorizer = joblib.load(os.path.join(CLASSIFICATION_FILES_DIR, video_id+'_vct'))
+  clf = joblib.load(os.path.join(CLASSIFICATION_FILES_DIR, video_id+'_clf'))
 
   if unlabeled_comments and type(unlabeled_comments[0]) == dict:
     contents = [c['content'] for c in unlabeled_comments]
