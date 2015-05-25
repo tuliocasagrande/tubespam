@@ -15,7 +15,6 @@
         <div><small>{{ v.description }}</small></div>
       </article>
 
-      <hr />
       {% csrf_token %}
 
     {% if len_error %}
@@ -23,7 +22,7 @@
 
     {% else %}
       <h3>Labeled Comments</h3>
-      <div id="classified_comments" class="panel callout radius">
+      <div id="classified_comments" class="comments panel callout radius">
       {% for c in comments %}
         {% include "app/_commentRow.html" %}
         {% if not forloop.last %}
@@ -32,7 +31,7 @@
       {% endfor %}
       </div>
 
-      <div id="comments">
+      <div id="comments" class="comments">
         <h3>Prediction</h3><hr/>
       {% for c, p in prediction %}
         <div class="comment-row row" tag-type="automatic" comment-id="{{ c }}">
@@ -50,7 +49,7 @@
         <hr/>
       {% endfor %}
       </div>
-      <a href id="moreComments" class="button expand secondary tiny loading-icon" disabled>Loading ...</a>
+      <a href id="more-comments" class="button expand secondary tiny loading-icon" disabled>Loading ...</a>
 
     {% endif %}
     </div>

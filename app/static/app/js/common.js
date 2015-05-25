@@ -1,4 +1,4 @@
-// Common functions used by watch.js and classify.js
+// Common functions and variables used by watch/spam/classify.js
 
 function formattedComment(comment_id, author, date, content, tag, tag_type) {
   tag_type = typeof tag_type !== 'undefined' ? tag_type : '';
@@ -49,7 +49,7 @@ function getNewComments(nextHandler, total_length, spam_length, ham_length) {
     if (data.responseText == 'Commenting is disabled for this video.') {
       console.log(data.responseText);
       $('#comments').append("<strong>Commenting were disabled for this video.</strong>");
-      $moreComments.remove();
+      $more_comments.remove();
       return;
     }
 
@@ -117,3 +117,18 @@ function loadNewComments(data) {
 function safe_tags(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+
+function lockLoadingButton($loadingButton) {
+  $loadingButton.addClass('loading-icon');
+  $loadingButton.prop('disabled', true);
+}
+function unlockLoadingButton($loadingButton) {
+  $loadingButton.removeClass('loading-icon');
+  $loadingButton.prop('disabled', false);
+}
+
+var $more_comments;
+$(function() {
+  $more_comments = $('#more-comments');
+
+});

@@ -10,21 +10,9 @@ var TAG = '<div class="small-3 columns">' +
           '<span class="comment_tag right tiny secondary button ham" tag="ham">Ham</span>' +
           '</div>';
 
-var $moreComments = $('#moreComments');
 var $classifiedCount = $('.classifiedCount');
 var $spamCount = $('#spamCount');
 var $hamCount = $('#hamCount');
-
-function lockMoreCommentsButton() {
-  $moreComments.html('Loading ...');
-  $moreComments.addClass('loading-icon');
-  $moreComments.attr('disabled', true);
-}
-function unlockMoreCommentsButton() {
-  $moreComments.html('Show more comments <i class="fi-refresh"></i>');
-  $moreComments.removeClass('loading-icon');
-  $moreComments.removeAttr('disabled');
-}
 
 function incrementCounter($counter) {
   var newValue = parseInt($counter.attr('value')) +1;
@@ -43,9 +31,10 @@ function putNewComments() {
 
   if (SUSPICIOUS_SPAM.length == 0 && SUSPICIOUS_HAM.length == 0 &&
       NEXT_URL == null) {
-    $moreComments.remove();
+    $more_comments.remove();
   } else {
-    unlockMoreCommentsButton();
+    $more_comments.html('Show more comments <i class="fi-refresh"></i>');
+    unlockLoadingButton($more_comments);
   }
 }
 
@@ -158,12 +147,13 @@ $(document).ready(function(){
     return false;
   });
 
-  $('#moreComments').click(function() {
-    if (!$(this).attr('disabled')) {
+  $more_comments.click(function() {
+    if (!$more_comments.attr('disabled')) {
       console.log('More comments...');
 
       if (NEXT_URL != null) {
-        lockMoreCommentsButton();
+        $more_comments.html('Loading ...');
+        lockLoadingButton($more_comments);
         getNewComments(putNewComments, 1000, 20, 30);
       } else {
         putNewComments();

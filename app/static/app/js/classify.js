@@ -21,19 +21,9 @@ var HAM_TAG = '<div class="tag_column small-3 columns">' +
           '<span class="'+ BUTTON +' success ham" disabled tag="ham">Ham</span>' +
           '</div>';
 
-var $moreComments = $('#moreComments');
 var $classifiedCount = $('.classifiedCount');
 var $spamCount = $('#spamCount');
 var $hamCount = $('#hamCount');
-
-function lockLoadingButton($loadingButton) {
-  $loadingButton.addClass('loading-icon');
-  $loadingButton.attr('disabled', true);
-}
-function unlockLoadingButton($loadingButton) {
-  $loadingButton.removeClass('loading-icon');
-  $loadingButton.removeAttr('disabled');
-}
 
 function incrementCounter($counter) {
   var newValue = parseInt($counter.attr('value')) +1;
@@ -56,7 +46,7 @@ function sendToClassifier() {
     data: { v: VIDEO_ID, 'comments[]': comments },
     dataType: 'json'
   }).fail(function(data) {
-    $moreComments.remove();
+    $more_comments.remove();
     console.log('ERROR! The server did\'t return a correct JSON.');
     console.log(data.responseText);
 
@@ -76,10 +66,10 @@ function sendToClassifier() {
 
     if (SUSPICIOUS_SPAM.length == 0 && SUSPICIOUS_HAM.length == 0 &&
       NEXT_URL == null) {
-      $moreComments.remove();
+      $more_comments.remove();
     } else {
-      $moreComments.html('Show more comments <i class="fi-refresh"></i>');
-      unlockLoadingButton($moreComments);
+      $more_comments.html('Show more comments <i class="fi-refresh"></i>');
+      unlockLoadingButton($more_comments);
       $('#export-modal-button').removeAttr('disabled');
     }
   });
@@ -263,14 +253,13 @@ $(document).ready(function(){
     return false;
   });
 
-  $('#moreComments').click(function() {
-    var $this = $(this);
-    if (!$this.attr('disabled')) {
+  $more_comments.click(function() {
+    if (!$more_comments.attr('disabled')) {
       console.log('More comments...');
 
       if (NEXT_URL != null) {
-        $this.html('Loading ...');
-        lockLoadingButton($this);
+        $more_comments.html('Loading ...');
+        lockLoadingButton($more_comments);
         getNewComments(sendToClassifier, 500, 40, 60);
       } else {
         sendToClassifier();
