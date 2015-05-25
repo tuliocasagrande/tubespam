@@ -2,7 +2,7 @@
 <div class="comment-row row" tag-type="manual" comment-id="{{ c.id }}">
   <p class="comment_header small-12 columns">
     <strong class="comment_author">{{ c.author }}</strong>
-    <a href="https://www.youtube.com/watch?v={{ v.video_id }}&google_comment_id={{ c.id }}" target="_blank">
+    <a href="https://www.youtube.com/all_comments?v={{ v.video_id }}&google_comment_id={{ c.id }}" target="_blank">
       <small class="comment_date">{{ c.date | pretty_date }}</small>
     </a>
   </p>
