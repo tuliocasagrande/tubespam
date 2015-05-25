@@ -95,7 +95,11 @@ def spam(request):
   if not video_id:
     return redirect('index')
 
+  #### TODO
+  # Exception Type: ServerNotFoundError
+  # Exception Value: Unable to find the server at www.googleapis.com
   video_details = youtube_api.get_video_by_id(video_id)
+  ####
   if not video_details:
     raise Http404('No Video matches the given query.')
 

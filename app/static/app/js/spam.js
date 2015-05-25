@@ -29,10 +29,11 @@ function putNewComments() {
   appendToHtml(SUSPICIOUS_HAM, 30);
 
   if (SUSPICIOUS_SPAM.length == 0 && SUSPICIOUS_HAM.length == 0 &&
-      NEXT_URL == null) {
+      NEXT_PAGE_TOKEN == null) {
     $more_comments.remove();
   } else {
-    unlockMoreCommentsButton();
+    $more_comments.html('Show more comments <i class="fi-refresh"></i>');
+    unlockLoadingButton($more_comments);
   }
 }
 

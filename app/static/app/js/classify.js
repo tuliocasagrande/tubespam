@@ -225,7 +225,7 @@ function saveComment(saveButton) {
 }
 
 function exportComments() {
-  $('#export-button').removeAttr('disabled');
+  $('#export-button').prop('disabled', false);
   $('#export-form').submit();
 }
 
@@ -281,14 +281,14 @@ $(document).ready(function(){
   });
 
   $('#export-form').submit(function() {
-    $exportButton = $('#export-button');
-    if ($exportButton.attr('disabled')) {
+    var $export_button = $('#export-button');
+    if ($export_button.attr('disabled')) {
       return false;
     }
 
-    lockLoadingButton($exportButton);
-    var $exportComments = $('#export-comments');
-    $exportComments.empty();
+    lockLoadingButton($export_button);
+    var $export_comments = $('#export-comments');
+    $export_comments.empty();
 
     /* Export options:
      * m  => manually classified only
@@ -321,7 +321,7 @@ $(document).ready(function(){
                       content: $(this).find('.comment_content').html()};
 
         newComment = JSON.stringify(newComment).replace(/"/g, '&quot;');
-        $exportComments.append('<input type="hidden" name="comments" value="'+newComment+'">');
+        $export_comments.append('<input type="hidden" name="comments" value="'+newComment+'">');
       });
 
       /* Handling hidden comments */
@@ -329,17 +329,17 @@ $(document).ready(function(){
       for (var i = 0; i < len; i++) {
         newComment = SUSPICIOUS_SPAM[i];
         newComment = JSON.stringify(newComment).replace(/"/g, '&quot;');
-        $exportComments.append('<input type="hidden" name="comments" value="'+newComment+'">');
+        $export_comments.append('<input type="hidden" name="comments" value="'+newComment+'">');
       }
 
       len = SUSPICIOUS_HAM.length < ham_length ? SUSPICIOUS_HAM.length : ham_length;
       for (var i = 0; i < len; i++) {
         newComment = SUSPICIOUS_HAM[i];
         newComment = JSON.stringify(newComment).replace(/"/g, '&quot;');
-        $exportComments.append('<input type="hidden" name="comments" value="'+newComment+'">');
+        $export_comments.append('<input type="hidden" name="comments" value="'+newComment+'">');
       }
     }
-    unlockLoadingButton($exportButton);
+    unlockLoadingButton($export_button);
     $('#export-modal').foundation('reveal', 'close');
   });
 

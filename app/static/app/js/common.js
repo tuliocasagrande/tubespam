@@ -118,13 +118,13 @@ function safe_tags(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function lockLoadingButton($loadingButton) {
-  $loadingButton.addClass('loading-icon');
-  $loadingButton.prop('disabled', true);
+function lockLoadingButton($button) {
+  $button.addClass('loading-icon');
+  $button.prop('disabled', true);
 }
-function unlockLoadingButton($loadingButton) {
-  $loadingButton.removeClass('loading-icon');
-  $loadingButton.prop('disabled', false);
+function unlockLoadingButton($button) {
+  $button.removeClass('loading-icon');
+  $button.prop('disabled', false);
 }
 
 var $more_comments;
