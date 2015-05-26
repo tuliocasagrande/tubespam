@@ -128,7 +128,7 @@ $(document).ready(function(){
   CSRFTOKEN = $.cookie('csrftoken');
   VIDEO_ID = $('#video-title').attr('video-id');
 
-  $('#comments').children('.comment[tag-type=manual]').each(function() {
+  $('#comments').children('.comment-row[tag-type=manual]').each(function() {
     TAGGED_COMMENTS[$(this).attr('comment-id')] = $(this).attr('comment-id');
   });
 
