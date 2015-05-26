@@ -50,18 +50,6 @@ function appendToHtml(list, count) {
   }
 }
 
-function suspiciousComment(content) {
-  var fixed = content.replace(/ /g,'').toLowerCase();
-
-  if (fixed.indexOf('visit') != -1 || fixed.indexOf('.co') != -1 ||
-      fixed.indexOf('http') != -1 || fixed.indexOf('buy') != -1 ||
-      fixed.indexOf('check') != -1 || fixed.indexOf('channel') != -1 ||
-      fixed.indexOf('site') != -1 || fixed.indexOf('subscrib') != -1) {
-    return true;
-  }
-  return false;
-}
-
 function saveComment(saveButton) {
   var $root = saveButton.parent().parent();
 

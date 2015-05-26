@@ -152,17 +152,6 @@ function mergeLists(spam_list, spam_length, ham_list, ham_length) {
   return newList;
 }
 
-function suspiciousComment(content) {
-  var fixed = content.replace(/ /g,'').toLowerCase();
-
-  if (fixed.indexOf('visit') != -1 || fixed.indexOf('.co') != -1 ||
-      fixed.indexOf('http') != -1 || fixed.indexOf('buy') != -1 ||
-      fixed.indexOf('site') != -1 || fixed.indexOf('subscrib') != -1) {
-    return true;
-  }
-  return false;
-}
-
 function saveComment(saveButton) {
   var $root = saveButton.parent().parent();
 

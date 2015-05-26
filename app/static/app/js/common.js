@@ -105,12 +105,24 @@ function loadNewComments(data) {
     }
 
     new_comment = {comment_id: comment_id, author: author, date: date, content: content};
-    if (suspiciousComment(content)) {
+    if (searchBlacklist(content)) {
       SUSPICIOUS_SPAM.push(new_comment);
     } else {
       SUSPICIOUS_HAM.push(new_comment);
     }
   }
+}
+
+function searchBlacklist(content) {
+  var fixed = content.replace(/ /g,'').toLowerCase();
+
+  if (fixed.indexOf('visit') != -1 || fixed.indexOf('.co') != -1 ||
+      fixed.indexOf('http') != -1 || fixed.indexOf('buy') != -1 ||
+      fixed.indexOf('check') != -1 || fixed.indexOf('channel') != -1 ||
+      fixed.indexOf('site') != -1 || fixed.indexOf('subscrib') != -1) {
+    return true;
+  }
+  return false;
 }
 
 // Multiple replaces is the fastest way. Do not change!
