@@ -15,7 +15,7 @@
 
       {% csrf_token %}
 
-      <div id="comments">
+      <div id="comments" class="comments-section">
       {% for c in comments %}
         {% include "app/_commentRow.html" %}
         <hr/>

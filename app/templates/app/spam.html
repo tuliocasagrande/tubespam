@@ -15,7 +15,7 @@
 
       {% csrf_token %}
 
-      <div id="new-comments"></div>
+      <div id="new-comments" class="comments-section"></div>
 
       <button id="more-comments" class="expand secondary tiny loading-icon" disabled>Loading ...</button>
     </div>
@@ -34,7 +34,7 @@
 
     <div id="training-set-modal" class="reveal-modal" data-reveal aria-labelledby="modalTitle" aria-hidden="true" role="dialog">
       <h3 id="modalTitle">Samples used to fit the model</h3>
-      <div id="classified-comments">
+      <div id="classified-comments" class="comments-section">
         {% for c in comments %}
           {% include "app/_commentRow.html" %}
           <hr/>

@@ -50,67 +50,6 @@ function appendToHtml(list, count) {
   }
 }
 
-function saveComment(saveButton) {
-  var $root = saveButton.parent().parent();
-
-  var comment_id = $root.attr('comment-id');
-  var tag = saveButton.attr('tag');
-  var content = $root.find('.comment_content').html();
-  var author = $root.find('.comment_author').html();
-  var date = $root.find('.comment_date').html();
-
-  $.ajax({
-    type: 'POST',
-    url: saveComment_ajax_url,
-    headers: {'X-CSRFToken': CSRFTOKEN},
-    data: {comment_id: comment_id,
-        video_id: VIDEO_ID,
-        author: author,
-        date: date,
-        content: content,
-        tag: tag },
-    dataType: 'text'
-  }).fail(function(data) {
-    console.log(data.responseText);
-
-  }).done(function(num_untrd_comments) {
-    var sibling = saveButton.siblings();
-
-    if (tag == 'spam') {
-      incrementCounter($spamCount);
-      if ($root.attr('tag-type') == 'manual') {
-        decrementCounter($hamCount);
-      } else {
-        incrementCounter($classifiedCount);
-      }
-      saveButton.addClass('alert');
-      sibling.removeClass('success');
-
-    } else {
-      incrementCounter($hamCount);
-      if ($root.attr('tag-type') == 'manual') {
-        decrementCounter($spamCount);
-      } else {
-        incrementCounter($classifiedCount);
-      }
-      saveButton.addClass('success');
-      sibling.removeClass('alert');
-    }
-
-    saveButton.attr('disabled', true);
-    sibling.removeAttr('disabled');
-    $root.attr('tag-type', 'manual');
-
-    if (parseInt($spamCount.attr('value')) >= 10 && parseInt($hamCount.attr('value')) >= 10) {
-      $('#classify-button').removeAttr('disabled');
-    } else {
-      $('#classify-button').attr('disabled', true);
-    }
-
-    console.log(num_untrd_comments);
-  });
-}
-
 $(document).ready(function(){
   /* Initializing some global variables */
   CSRFTOKEN = $.cookie('csrftoken');
@@ -127,11 +66,14 @@ $(document).ready(function(){
   getNewComments(putNewComments, 1000, 20, 30);
 
   /* EVENTS */
-  $('#comments').on('click', '.comment_tag', function() {
-    var $this = $(this);
-    if (!$this.attr('disabled')) {
-      saveComment($this);
-    }
+  $('.comments-section').on('click', '.comment_tag', function() {
+    saveComment($(this), function() {
+      if (parseInt($spamCount.attr('value')) >= 10 && parseInt($hamCount.attr('value')) >= 10) {
+        $('#classify-button').removeAttr('disabled');
+      } else {
+        $('#classify-button').attr('disabled', true);
+      }
+    });
     return false;
   });
 

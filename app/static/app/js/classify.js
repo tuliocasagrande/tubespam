@@ -77,12 +77,12 @@ function sendToClassifier() {
 
 function retrainClassifier() {
   var $comments = $('#comments');
-  var $classifiedComments = $('#classified_comments');
+  var $classified_comments = $('#classified-comments');
 
   var $commentsChildrenManual = $comments.children('.comment-row[tag-type=manual]');
   $commentsChildrenManual.each(function() {
-    $classifiedComments.append('<hr/>')
-    $(this).appendTo($classifiedComments);
+    $classified_comments.append('<hr/>')
+    $(this).appendTo($classified_comments);
   });
 
   var newList = [];
@@ -152,67 +152,6 @@ function mergeLists(spam_list, spam_length, ham_list, ham_length) {
   return newList;
 }
 
-function saveComment(saveButton) {
-  var $root = saveButton.parent().parent();
-
-  var comment_id = $root.attr('comment-id');
-  var tag = saveButton.attr('tag');
-  var content = $root.find('.comment_content').html();
-  var author = $root.find('.comment_author').html();
-  var date = $root.find('.comment_date').html();
-
-  $.ajax({
-    type: 'POST',
-    url: saveComment_ajax_url,
-    headers: {'X-CSRFToken': CSRFTOKEN},
-    data: {comment_id: comment_id,
-        video_id: VIDEO_ID,
-        author: author,
-        date: date,
-        content: content,
-        tag: tag },
-    dataType: 'text'
-  }).fail(function(data) {
-    console.log(data.responseText);
-
-  }).done(function(num_untrd_comments) {
-    var sibling = saveButton.siblings();
-
-    if (tag == 'spam') {
-      incrementCounter($spamCount);
-      if ($root.attr('tag-type') == 'manual') {
-        decrementCounter($hamCount);
-      } else {
-        incrementCounter($classifiedCount);
-      }
-      saveButton.addClass('alert');
-      sibling.removeClass('success');
-
-    } else {
-      incrementCounter($hamCount);
-      if ($root.attr('tag-type') == 'manual') {
-        decrementCounter($spamCount);
-      } else {
-        incrementCounter($classifiedCount);
-      }
-      saveButton.addClass('success');
-      sibling.removeClass('alert');
-    }
-
-    saveButton.attr('disabled', true);
-    sibling.removeAttr('disabled');
-    $root.attr('tag-type', 'manual');
-
-    console.log(num_untrd_comments);
-    if (num_untrd_comments >= 5) {
-      refit = confirm(num_untrd_comments +' comments were manually fixed since the last training. Retrain the classifier?')
-      if (refit) {
-        retrainClassifier();
-      }
-    }
-  });
-}
-
 function exportComments() {
   $('#export-button').prop('disabled', false);
   $('#export-form').submit();
@@ -223,7 +162,7 @@ $(document).ready(function(){
   CSRFTOKEN = $.cookie('csrftoken');
   VIDEO_ID = $('#video-title').attr('video-id');
 
-  $('#classified_comments').children('.comment-row[tag-type=manual]').each(function() {
+  $('#classified-comments').children('.comment-row[tag-type=manual]').each(function() {
     TAGGED_COMMENTS[$(this).attr('comment-id')] = $(this).attr('comment-id');
   });
 
@@ -234,11 +173,13 @@ $(document).ready(function(){
   getNewComments(sendToClassifier, 500, 40, 60);
 
   /* EVENTS */
-  $('#comments, #classified_comments').on('click', '.comment_tag', function() {
-    var $this = $(this);
-    if (!$this.attr('disabled')) {
-      saveComment($this);
-    }
+  $('.comments-section').on('click', '.comment_tag', function() {
+    saveComment($(this), function(num_untrd_comments) {
+      if (num_untrd_comments >= 5) {
+        refit = confirm(num_untrd_comments +' comments were manually fixed since the last training. Retrain the classifier?')
+        if (refit) retrainClassifier();
+      }
+    });
     return false;
   });
 
