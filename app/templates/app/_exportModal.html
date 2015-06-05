@@ -3,7 +3,7 @@
   <h2>Export Comments</h2>
   <a class="close-reveal-modal">&#215;</a>
 
-  <form id="export-form" action='/export' method="post">{% csrf_token %}
+  <form id="export-form" action="{% url 'export' %}" method="post">{% csrf_token %}
     <input type="hidden" name="v" value="{{ v.video_id }}">
     <div id="export-comments"></div>
 
