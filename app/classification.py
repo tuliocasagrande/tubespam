@@ -3,7 +3,6 @@ import os
 from sklearn.externals import joblib
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.grid_search import GridSearchCV
-from sklearn.semi_supervised import LabelSpreading
 from sklearn.svm import LinearSVC
 
 CLASSIFICATION_FILES_DIR = 'tubespam_classification_files'
@@ -17,8 +16,10 @@ def get_classifier(video_id):
   except:
     return None
 
-def fit(video_id, comments, unlabeled_comments):
-  """ Dual supervised training
+def dual_fit(video_id, comments, unlabeled_comments):
+  """ Old and unused classification process
+
+      Dual supervised training
       Training/fitting occurs in two steps:
 
       1- Fit the LabelSpreading semi-supervised method with RBF kernel. It is
@@ -75,6 +76,42 @@ def fit(video_id, comments, unlabeled_comments):
   # Fitting the final clf with manually classified and predicted comments
 
   param_grid = {'C': range5}
+  svm_grid = GridSearchCV(LinearSVC(), param_grid, cv=10).fit(X, y)
+
+  # Saving vectorizer & classifier
+  joblib.dump(vectorizer, os.path.join(CLASSIFICATION_FILES_DIR, video_id+'_vct'))
+  joblib.dump(svm_grid.best_estimator_, os.path.join(CLASSIFICATION_FILES_DIR, video_id+'_clf'))
+
+  # Array with accuracies achieved by cross-validation
+  for parameters, mean_validation_score, cv_validation_scores in svm_grid.grid_scores_:
+    if parameters == svm_grid.best_params_:
+
+      # Returning scores
+      # mean +/- 2sigma (approximately a 95% confidence interval)
+      return cv_validation_scores.mean()*100, cv_validation_scores.std()*2
+
+
+def fit(video_id, comments):
+  """ Supervised training with LinearSVM
+      comments = QuerySet( [Comment(id, author, date, content, tag)] )
+  """
+
+  if not os.path.exists(CLASSIFICATION_FILES_DIR):
+    os.makedirs(CLASSIFICATION_FILES_DIR)
+
+  contents = []
+  classes = []
+  for c in comments:
+    contents.append(c.content)
+    classes.append(1 if c.tag else 0)
+
+  # ======================== Vectorizer (bag of words) ======================== #
+  vectorizer = CountVectorizer()
+  X = vectorizer.fit_transform(contents)
+  y = np.asarray(classes)
+
+  # ============================= SVM classifier ============================= #
+  param_grid = {'C': [10.0**i for i in range(-5,5)]}
   svm_grid = GridSearchCV(LinearSVC(), param_grid, cv=10).fit(X, y)
 
   # Saving vectorizer & classifier

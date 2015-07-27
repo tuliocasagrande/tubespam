@@ -95,11 +95,7 @@ def spam(request):
   if not video_id:
     return redirect('index')
 
-  #### TODO
-  # Exception Type: ServerNotFoundError
-  # Exception Value: Unable to find the server at www.googleapis.com
   video_details = youtube_api.get_video_by_id(video_id)
-  ####
   if not video_details:
     raise Http404('No Video matches the given query.')
 
@@ -202,7 +198,7 @@ def train(request):
           pred = classification.predict(video_id, unlabeled_comments)
 
         else:
-          video.acc, video.stddev = classification.fit(video_id, comments, unlabeled_comments)
+          video.acc, video.stddev = classification.fit(video_id, comments)
           video.num_untrd_comments = 0
           video.save()
           pred = classification.predict(video_id, unlabeled_comments)
@@ -222,7 +218,7 @@ def train(request):
 def reloadClassifierInfo(request):
   output = ''
 
-  video_id = request.GET['v']
+  video_id = request.GET.get('v')
   video = Video.objects.get(id=video_id)
   clf = classification.get_classifier(video_id)
   if video and clf:
