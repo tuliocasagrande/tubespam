@@ -3,6 +3,7 @@ from django.db import models
 class Video(models.Model):
   id = models.CharField(primary_key=True, max_length=16)
   num_untrd_comments = models.IntegerField(default=0)
+  cost = models.DecimalField(max_digits=10, decimal_places=5, null=True, blank=True)
   acc = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
   stddev = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
 

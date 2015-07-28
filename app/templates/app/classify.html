@@ -4,7 +4,6 @@
 
 {% block content %}
     {% load humanize %}
-    {% load get_class_name %}
     {% load pretty_date %}
     <!-- Main Content -->
     <div class="large-8 columns" role="content">
@@ -63,11 +62,11 @@
 
         {% if not len_error %}
           <div id="clf-info">
-          {% if clf %}
+          {% if has_clf %}
             <hr/>
             <div>
               <strong>Classifier:</strong>
-              {{ clf | get_class_name }} (c: {{ clf.get_params.C|floatformat:-5 }})
+              SVM Linear (c: {{ cost|floatformat:-5 }})
             </div>
             <div>
               <strong>Accuracy:</strong>
