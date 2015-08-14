@@ -218,12 +218,15 @@ def reloadClassifierInfo(request):
   output = ''
 
   video_id = request.GET.get('v')
-  video = Video.objects.get(id=video_id)
-  if video and classification.has_classifier(video_id):
-    output = '<hr/><div class="pulse">' \
-             '<div><strong>Classifier:</strong> SVM Linear (c: {:f})</div>' \
-             '<div><strong>Accuracy:</strong> {:.2f}% &#177; {:.2f}%</div>' \
-             '</div><hr/>'.format(video.cost, video.acc, video.stddev)
+  if video_id:
+    video = Video.objects.get(id=video_id)
+    if video and classification.has_classifier(video_id):
+      # TODO
+      # RETURN A JSON FOR GOD SAKE
+      output = '<hr/><div class="pulse">' \
+               '<div><strong>Classifier:</strong> SVM Linear (c: {:f})</div>' \
+               '<div><strong>Accuracy:</strong> {:.2f}% &#177; {:.2f}%</div>' \
+               '</div><hr/>'.format(video.cost, video.acc, video.stddev)
   return HttpResponse(output)
 
 def export(request):
