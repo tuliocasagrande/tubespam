@@ -99,15 +99,15 @@ $(document).ready(function(){
     }
   });
 
-  $('#hide-spam-button').click(function(event) {
-    if ($(this).attr('action') == 'hide') {
-      $('#comments').find('.comment_tag[tag=spam][disabled]').parent().parent().fadeOut(1);
-      $(this).attr('action', 'show');
-      $(this).html('Show spam');
-    } else {
-      $('#comments').find('.comment_tag[tag=spam][disabled]').parent().parent().fadeIn(1);
-      $(this).attr('action', 'hide');
-      $(this).html('Hide spam');
-    }
-  });
+  // $('#hide-spam-button').click(function(event) {
+  //   if ($(this).attr('action') == 'hide') {
+  //     $('#comments').find('.comment_tag[tag=spam][disabled]').parent().parent().fadeOut(1);
+  //     $(this).attr('action', 'show');
+  //     $(this).html('Show spam');
+  //   } else {
+  //     $('#comments').find('.comment_tag[tag=spam][disabled]').parent().parent().fadeIn(1);
+  //     $(this).attr('action', 'hide');
+  //     $(this).html('Hide spam');
+  //   }
+  // });
 });
