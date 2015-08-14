@@ -95,11 +95,7 @@ def spam(request):
   if not video_id:
     return redirect('index')
 
-  #### TODO
-  # Exception Type: ServerNotFoundError
-  # Exception Value: Unable to find the server at www.googleapis.com
   video_details = youtube_api.get_video_by_id(video_id)
-  ####
   if not video_details:
     raise Http404('No Video matches the given query.')
 
@@ -120,7 +116,7 @@ def predictSpam(request):
       if next_page_token == 'None':
         next_page_token = None
 
-      if classification.get_classifier(video_id):
+      if classification.has_classifier(video_id):
 
         spam = []
         while len(spam) < 10:
@@ -160,14 +156,14 @@ def classify(request):
 
   output = {'v': video_details, 'len_error': False,
             'spam_count': spam_count, 'ham_count': ham_count,
-            'clf': classification.get_classifier(video_id)}
+            'has_clf': classification.has_classifier(video_id)}
 
   if spam_count < 10 or ham_count < 10:
      output['len_error'] = True
      return render(request, 'app/classify.html', output)
 
   # Save to use with the API v3 (when available)
-  # elif video.num_untrd_comments < 5 and output['clf'] != None:
+  # elif video.num_untrd_comments < 5 and classification.has_classifier(video_id):
   #   pred = classification.predict(video_id, test())
 
   # else:
@@ -175,9 +171,9 @@ def classify(request):
   #   video.num_untrd_comments = 0
   #   video.save()
   #   pred = classification.predict(video_id, test())
-  #   output['clf'] = classification.get_classifier(video_id)
 
 
+  output['cost'] = video.cost
   output['acc'] = video.acc
   output['stddev'] = video.stddev
   output['comments'] = comments
@@ -195,14 +191,13 @@ def train(request):
       comments = Comment.objects.filter(video=video_id)
       spam_count = comments.filter(tag=True).count()
       ham_count = len(comments) - spam_count
-      clf = classification.get_classifier(video_id)
 
       if video_id and unlabeled_comments and spam_count >= 10 and ham_count >= 10:
-        if video.num_untrd_comments < 5 and clf != None:
+        if video.num_untrd_comments < 5 and classification.has_classifier(video_id):
           pred = classification.predict(video_id, unlabeled_comments)
 
         else:
-          video.acc, video.stddev = classification.fit(video_id, comments, unlabeled_comments)
+          video.cost, video.acc, video.stddev = classification.fit(video_id, comments)
           video.num_untrd_comments = 0
           video.save()
           pred = classification.predict(video_id, unlabeled_comments)
@@ -222,14 +217,13 @@ def train(request):
 def reloadClassifierInfo(request):
   output = ''
 
-  video_id = request.GET['v']
+  video_id = request.GET.get('v')
   video = Video.objects.get(id=video_id)
-  clf = classification.get_classifier(video_id)
-  if video and clf:
+  if video and classification.has_classifier(video_id):
     output = '<hr/><div class="pulse">' \
-             '<div><strong>Classifier:</strong> {} (c: {})</div>' \
+             '<div><strong>Classifier:</strong> SVM Linear (c: {:f})</div>' \
              '<div><strong>Accuracy:</strong> {:.2f}% &#177; {:.2f}%</div>' \
-             '</div><hr/>'.format(clf.__class__.__name__, clf.get_params()['C'], video.acc, video.stddev)
+             '</div><hr/>'.format(video.cost, video.acc, video.stddev)
   return HttpResponse(output)
 
 def export(request):
