@@ -20,7 +20,7 @@ def get_video_by_id(video_id):
     ).execute()
 
     video_details = {}
-    if 'items' in search_response:
+    if 'items' in search_response and len(search_response['items']):
       search_result = search_response['items'][0]
       video_details['video_id'] = video_id
       video_details['player'] = search_result['player']['embedHtml']

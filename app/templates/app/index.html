@@ -4,6 +4,7 @@
 
 {% block content %}
 {% load humanize %}
+<div class="row">
   <div class="large-12 columns">
     {% if classified_videos %}
     <h4>Most classified comments</h4>
@@ -52,4 +53,22 @@
     </div>
     {% endif %}
   </div>
+</div>
+<div class="row">
+  <div class="medium-10 medium-offset-1 large-8 large-offset-2 columns">
+    <form action="{% url 'watch' %}">
+      <div class="row collapse">
+        <div class="small-7 medium-6 columns">
+          <span class="prefix">https://www.youtube.com/watch?v=</span>
+        </div>
+        <div class="small-3 medium-4 columns">
+          <input type="text" placeholder="Video ID" name="v">
+        </div>
+        <div class="small-2 columns">
+          <input type="submit" class="button postfix" value="Go">
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}
