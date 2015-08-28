@@ -1,4 +1,37 @@
 // Common functions and variables used by watch/spam/classify.js
+var VIDEO_ID;
+var CSRFTOKEN;
+var NEXT_PAGE_TOKEN;
+
+var $classifiedCount = $('.classifiedCount');
+var $spamCount = $('#spamCount');
+var $hamCount = $('#hamCount');
+
+var TAG = '<div class="tag-column small-3 columns">' +
+          '<span class="comment_tag right tiny secondary button spam" tag="spam">Spam</span>' +
+          '<span class="comment_tag right tiny secondary button ham" tag="ham">Ham</span>' +
+          '</div>';
+
+var SPAM_TAG = '<div class="tag-column small-3 columns">' +
+          '<span class="comment_tag right tiny secondary button alert spam" disabled tag="spam">Spam</span>' +
+          '<span class="comment_tag right tiny secondary button ham" tag="ham">Ham</span>' +
+          '</div>';
+
+var HAM_TAG = '<div class="tag-column small-3 columns">' +
+          '<span class="comment_tag right tiny secondary button spam" tag="spam">Spam</span>' +
+          '<span class="comment_tag right tiny secondary button success ham" disabled tag="ham">Ham</span>' +
+          '</div>';
+
+function incrementCounter($counter) {
+  var newValue = parseInt($counter.attr('value')) +1;
+  $counter.attr('value', newValue);
+  $counter.html(formattedNumber(newValue));
+}
+function decrementCounter($counter) {
+  var newValue = parseInt($counter.attr('value')) -1;
+  $counter.attr('value', newValue);
+  $counter.html(formattedNumber(newValue));
+}
 
 function formattedComment(comment_id, author, date, content, tag, tag_type) {
   tag_type = typeof tag_type !== 'undefined' ? tag_type : '';
@@ -130,11 +163,13 @@ function safe_tags(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function lockLoadingButton($button) {
+function lockLoadingButton($button, text_change) {
+  if (text_change) $button.html(text_change);
   $button.addClass('loading-icon');
   $button.prop('disabled', true);
 }
-function unlockLoadingButton($button) {
+function unlockLoadingButton($button, text_change) {
+  if (text_change) $button.html(text_change);
   $button.removeClass('loading-icon');
   $button.prop('disabled', false);
 }

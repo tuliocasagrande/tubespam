@@ -5,26 +5,6 @@ var SUSPICIOUS_SPAM = [];
 var SUSPICIOUS_HAM = [];
 var NEXT_URL;
 
-var TAG = '<div class="small-3 columns">' +
-          '<span class="comment_tag right tiny secondary button spam" tag="spam">Spam</span>' +
-          '<span class="comment_tag right tiny secondary button ham" tag="ham">Ham</span>' +
-          '</div>';
-
-var $classifiedCount = $('.classifiedCount');
-var $spamCount = $('#spamCount');
-var $hamCount = $('#hamCount');
-
-function incrementCounter($counter) {
-  var newValue = parseInt($counter.attr('value')) +1;
-  $counter.attr('value', newValue);
-  $counter.html(formattedNumber(newValue));
-}
-function decrementCounter($counter) {
-  var newValue = parseInt($counter.attr('value')) -1;
-  $counter.attr('value', newValue);
-  $counter.html(formattedNumber(newValue));
-}
-
 function putNewComments() {
   appendToHtml(SUSPICIOUS_SPAM, 20);
   appendToHtml(SUSPICIOUS_HAM, 30);
@@ -33,8 +13,7 @@ function putNewComments() {
       NEXT_URL == null) {
     $more_comments.remove();
   } else {
-    $more_comments.html('Show more comments <i class="fi-refresh"></i>');
-    unlockLoadingButton($more_comments);
+    unlockLoadingButton($more_comments, 'Show more comments <i class="fi-refresh"></i>');
   }
 }
 
@@ -82,8 +61,7 @@ $(document).ready(function(){
       console.log('More comments...');
 
       if (NEXT_URL != null) {
-        $more_comments.html('Loading ...');
-        lockLoadingButton($more_comments);
+        lockLoadingButton($more_comments, 'Loading ...');
         getNewComments(putNewComments, 1000, 20, 30);
       } else {
         putNewComments();

@@ -15,12 +15,7 @@
 
       {% csrf_token %}
 
-      <div id="comments" class="comments-section">
-      {% for c in comments %}
-        {% include "app/_commentRow.html" %}
-        <hr/>
-      {% endfor %}
-      </div>
+      <div id="predicted-comments" class="comments-section"></div>
 
       <button id="more-comments" class="expand secondary tiny loading-icon" disabled>Loading ...</button>
     </div>
@@ -31,12 +26,14 @@
       <div id="summary" class="panel">
         {% include "app/_commonSummary.html" %}
         <a href="{% url 'spam' %}?v={{ v.video_id }}" class="button expand tiny">Check spam</a>
+        <a href="#" data-reveal-id="training-set-modal" class="button expand tiny">See the training set</a>
         <a href="#" id="export-modal-button" data-reveal-id="export-modal" class="button expand tiny" disabled>Export comments <i class="fi-arrow-down"></i></a>
-        {% endif %}
       </div>
     </aside>
     <!-- End Sidebar -->
     {% include "app/_exportModal.html" %}
+    {% include "app/_trainingSetModal.html" %}
+
 {% endblock %}
 
 {% block js %}

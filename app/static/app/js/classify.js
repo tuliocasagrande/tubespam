@@ -5,37 +5,6 @@ var SUSPICIOUS_SPAM = [];
 var SUSPICIOUS_HAM = [];
 var NEXT_URL;
 
-var BUTTON = 'comment_tag right tiny secondary button';
-var TAG = '<div class="tag_column small-3 columns">' +
-          '<span class="'+ BUTTON +' spam" tag="spam">Spam</span>' +
-          '<span class="'+ BUTTON +' ham" tag="ham">Ham</span>' +
-          '</div>';
-
-var SPAM_TAG = '<div class="tag_column small-3 columns">' +
-          '<span class="'+ BUTTON +' alert spam" disabled tag="spam">Spam</span>' +
-          '<span class="'+ BUTTON +' ham" tag="ham">Ham</span>' +
-          '</div>';
-
-var HAM_TAG = '<div class="tag_column small-3 columns">' +
-          '<span class="'+ BUTTON +' spam" tag="spam">Spam</span>' +
-          '<span class="'+ BUTTON +' success ham" disabled tag="ham">Ham</span>' +
-          '</div>';
-
-var $classifiedCount = $('.classifiedCount');
-var $spamCount = $('#spamCount');
-var $hamCount = $('#hamCount');
-
-function incrementCounter($counter) {
-  var newValue = parseInt($counter.attr('value')) +1;
-  $counter.attr('value', newValue);
-  $counter.html(formattedNumber(newValue));
-}
-function decrementCounter($counter) {
-  var newValue = parseInt($counter.attr('value')) -1;
-  $counter.attr('value', newValue);
-  $counter.html(formattedNumber(newValue));
-}
-
 function sendToClassifier() {
   var comments = mergeLists(SUSPICIOUS_SPAM, 40, SUSPICIOUS_HAM, 60);
 
@@ -68,8 +37,7 @@ function sendToClassifier() {
       NEXT_URL == null) {
       $more_comments.remove();
     } else {
-      $more_comments.html('Show more comments <i class="fi-refresh"></i>');
-      unlockLoadingButton($more_comments);
+      unlockLoadingButton($more_comments, 'Show more comments <i class="fi-refresh"></i>');
       $('#export-modal-button').removeAttr('disabled');
     }
   });
@@ -175,8 +143,7 @@ $(document).ready(function(){
       console.log('More comments...');
 
       if (NEXT_URL != null) {
-        $more_comments.html('Loading ...');
-        lockLoadingButton($more_comments);
+        lockLoadingButton($more_comments, 'Loading ...');
         getNewComments(sendToClassifier, 500, 40, 60);
       } else {
         sendToClassifier();

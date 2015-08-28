@@ -109,32 +109,35 @@ def spam(request):
 
 def predictSpam(request):
   output = '{'
-  if request.is_ajax():
-    if request.method == 'GET':
-      video_id = request.GET['v']
-      next_page_token = request.GET['next_page_token']
-      if next_page_token == 'None':
-        next_page_token = None
+  if not request.is_ajax() and request.method == 'GET':
+    video_id = request.GET.get('v')
+    if not video_id:
+      return redirect('index')
 
-      if classification.has_classifier(video_id):
+    next_page_token = request.GET.get('next_page_token', None)
+    if next_page_token == 'None':
+      next_page_token = None
 
-        spam = []
-        while len(spam) < 10:
-          unlabeled_comments, next_page_token = youtube_api.get_comment_threads(
-            video_id, next_page_token)
-          pred = classification.predict(video_id, unlabeled_comments)
-          for idx, each in enumerate(unlabeled_comments):
-            each['tag'] = pred[idx]
-          spam.extend([each for each in unlabeled_comments if each['tag'] == 1])
+    if classification.has_classifier(video_id):
 
-        json_format = '"{0}":{{"author":{1},"date":"{2}","content":{3}}}'
-        output += ','.join([json_format.format(
-                              each['comment_id'],
-                              json.dumps(each['author']),
-                              each['publishedAt'].strftime(DATE_FORMAT),
-                              json.dumps(each['content']))
-                            for each in spam])
+      spam = []
+      while len(spam) < 10:
+        unlabeled_comments, next_page_token = youtube_api.get_comment_threads(
+          video_id, next_page_token)
+        pred = classification.predict(video_id, unlabeled_comments)
+        for idx, each in enumerate(unlabeled_comments):
+          each['tag'] = pred[idx]
+        spam.extend([each for each in unlabeled_comments if each['tag'] == 1])
 
+      output += '"next_page_token":"{0}","comments":{{'.format(next_page_token)
+      json_format = '"{0}":{{"author":{1},"date":"{2}","content":{3}}}'
+      output += ','.join([json_format.format(
+                            each['comment_id'],
+                            json.dumps(each['author']),
+                            each['publishedAt'].strftime(DATE_FORMAT),
+                            json.dumps(each['content']))
+                          for each in spam])
+      output += '}'
   output += '}'
   return HttpResponse(output)
 
