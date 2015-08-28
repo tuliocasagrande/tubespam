@@ -29,17 +29,14 @@
     <!-- Sidebar -->
     <aside class="large-4 columns">
       <div id="summary" class="panel">
-        <h4>Summary</h4>
         {% include "app/_commonSummary.html" %}
-
-        {% if spam_count < 10 or ham_count < 10 %}
-        <a href="{% url 'classify' %}?v={{ v.video_id }}" id="classify-button" class="button expand tiny" disabled>Classify</a>
-        {% else %}
-        <a href="{% url 'classify' %}?v={{ v.video_id }}" id="classify-button" class="button expand tiny">Classify</a>
+        <a href="{% url 'spam' %}?v={{ v.video_id }}" class="button expand tiny">Check spam</a>
+        <a href="#" id="export-modal-button" data-reveal-id="export-modal" class="button expand tiny" disabled>Export comments <i class="fi-arrow-down"></i></a>
         {% endif %}
       </div>
     </aside>
     <!-- End Sidebar -->
+    {% include "app/_exportModal.html" %}
 {% endblock %}
 
 {% block js %}
