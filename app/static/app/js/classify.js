@@ -117,19 +117,6 @@ function retrainClassifier() {
                               data[key].content, HAM_TAG, 'automatic'));
       }
     }
-
-    reloadClassifierInfo();
-  });
-}
-
-function reloadClassifierInfo() {
-  $.ajax({
-    type: 'GET',
-    url: reloadClassifierInfo_ajax_url,
-    data: { v: VIDEO_ID },
-    dataType: 'html'
-  }).done(function(data) {
-    $('#clf-info').html(data);
   });
 }
 
