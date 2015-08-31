@@ -109,7 +109,7 @@ def spam(request):
 
 def predictSpam(request):
   output = '{'
-  if not request.is_ajax() and request.method == 'GET':
+  if request.is_ajax() and request.method == 'GET':
     video_id = request.GET.get('v')
     if not video_id:
       return redirect('index')
