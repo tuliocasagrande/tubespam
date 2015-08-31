@@ -1,27 +1,3 @@
-// Common functions and variables used by watch/spam/classify.js
-var VIDEO_ID;
-var CSRFTOKEN;
-var NEXT_PAGE_TOKEN;
-
-var $classifiedCount = $('.classifiedCount');
-var $spamCount = $('#spamCount');
-var $hamCount = $('#hamCount');
-
-var TAG = '<div class="tag-column small-3 columns">' +
-          '<span class="comment_tag right tiny secondary button spam" tag="spam">Spam</span>' +
-          '<span class="comment_tag right tiny secondary button ham" tag="ham">Ham</span>' +
-          '</div>';
-
-var SPAM_TAG = '<div class="tag-column small-3 columns">' +
-          '<span class="comment_tag right tiny secondary button alert spam" disabled tag="spam">Spam</span>' +
-          '<span class="comment_tag right tiny secondary button ham" tag="ham">Ham</span>' +
-          '</div>';
-
-var HAM_TAG = '<div class="tag-column small-3 columns">' +
-          '<span class="comment_tag right tiny secondary button spam" tag="spam">Spam</span>' +
-          '<span class="comment_tag right tiny secondary button success ham" disabled tag="ham">Ham</span>' +
-          '</div>';
-
 function incrementCounter($counter) {
   var newValue = parseInt($counter.attr('value')) +1;
   $counter.attr('value', newValue);
@@ -66,98 +42,6 @@ function formattedNumber(number, decimals, dec_point, thousands_sep) {
   return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
 }
 
-function getNewComments(nextHandler, total_length, spam_length, ham_length) {
-
-  if (!nextHandler || (typeof nextHandler !== "function")) {
-    console.log('error: callback is not a function');
-    console.log(nextHandler);
-  }
-
-  $.ajax({
-    type: 'GET',
-    url: NEXT_URL,
-    dataType: 'json'
-  }).fail(function(data) {
-
-    if (data.responseText == 'Commenting is disabled for this video.') {
-      console.log(data.responseText);
-      $('#comments').append("<strong>Commenting were disabled for this video.</strong>");
-      $more_comments.remove();
-      return;
-    }
-
-    // This usually happens when the api receives too many hits
-    console.log('Something went wrong. Trying again in few seconds.');
-    setTimeout(function(){
-      getNewComments(nextHandler, total_length, spam_length, ham_length)
-    }, 3000);
-
-  }).done(function(data){
-    loadNewComments(data);
-    console.log(SUSPICIOUS_SPAM.length + SUSPICIOUS_HAM.length);
-
-    if (data.feed.link[data.feed.link.length-1].rel == 'next') {
-      NEXT_URL = data.feed.link[data.feed.link.length-1].href;
-    } else {
-      NEXT_URL = null;
-      nextHandler();
-      return;
-    }
-
-    if ((SUSPICIOUS_SPAM.length + SUSPICIOUS_HAM.length > total_length) ||
-        (SUSPICIOUS_SPAM.length > spam_length && SUSPICIOUS_HAM.length > ham_length)) {
-      nextHandler();
-      return;
-    }
-
-    getNewComments(nextHandler, total_length, spam_length, ham_length);
-  });
-}
-
-function loadNewComments(data) {
-  var len, start_index, comment_id, author, date, content, new_comment;
-
-  try {
-    len = data.feed.entry.length;
-  } catch(e) {
-    console.log(e);
-    len = 0;
-  }
-
-  for (var i = 0; i < len; i++) {
-    start_index = data.feed.entry[i].id.$t.lastIndexOf('/') + 1;
-    comment_id = data.feed.entry[i].id.$t.substring(start_index);
-    author = data.feed.entry[i].author[0].name.$t;
-    date = new Date(data.feed.entry[i].published.$t).toUTCString();
-    content = safe_tags(data.feed.entry[i].content.$t);
-
-    if (TAGGED_COMMENTS.hasOwnProperty(comment_id)) {
-      continue;
-    } else if (!content.trim()) {
-      continue;
-    }
-
-    new_comment = {comment_id: comment_id, author: author, date: date, content: content};
-    if (searchBlacklist(content)) {
-      SUSPICIOUS_SPAM.push(new_comment);
-    } else {
-      SUSPICIOUS_HAM.push(new_comment);
-    }
-  }
-}
-
-function searchBlacklist(content) {
-  var fixed = content.replace(/ /g,'').toLowerCase();
-
-  if (fixed.indexOf('visit') != -1 || fixed.indexOf('.co') != -1 ||
-      fixed.indexOf('http') != -1 || fixed.indexOf('buy') != -1 ||
-      fixed.indexOf('check') != -1 || fixed.indexOf('channel') != -1 ||
-      fixed.indexOf('site') != -1 || fixed.indexOf('subscrib') != -1) {
-    return true;
-  }
-  return false;
-}
-
 // Multiple replaces is the fastest way. Do not change!
 function safe_tags(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -174,13 +58,32 @@ function unlockLoadingButton($button, text_change) {
   $button.prop('disabled', false);
 }
 
-function saveComment($saveButton, callback) {
-  if ($saveButton.attr('disabled')) return;
 
-  var $root = $saveButton.parent().parent();
+function appendToHtml(list, count) {
+  var new_comment;
+  var len = list.length < count ? list.length : count;
+
+  for (var i = 0; i < len; i++) {
+    new_comment = list.shift();
+    $('#comments').append(formattedComment(
+      new_comment.comment_id, new_comment.author, new_comment.date,
+      new_comment.content, TAG, 'unclassified'));
+  }
+}
+
+function minRequired() {
+  if (parseInt($spam_count.attr('value')) >= 10 && parseInt($ham_count.attr('value')) >= 10) {
+    // ALLOW CLASSIFIER FITTING
+  }
+}
+
+function saveComment($save_button, callback) {
+  if ($save_button.attr('disabled')) return;
+
+  var $root = $save_button.parent().parent();
 
   var comment_id = $root.attr('comment-id');
-  var tag = $saveButton.attr('tag');
+  var tag = $save_button.attr('tag');
   var content = $root.find('.comment_content').html();
   var author = $root.find('.comment_author').html();
   var date = $root.find('.comment_date').html();
@@ -200,30 +103,30 @@ function saveComment($saveButton, callback) {
     console.log(data.responseText);
 
   }).done(function(num_untrd_comments) {
-    var sibling = $saveButton.siblings();
+    var sibling = $save_button.siblings();
 
     if (tag == 'spam') {
-      incrementCounter($spamCount);
+      incrementCounter($spam_count);
       if ($root.attr('tag-type') == 'manual') {
-        decrementCounter($hamCount);
+        decrementCounter($ham_count);
       } else {
-        incrementCounter($classifiedCount);
+        incrementCounter($classified_count);
       }
-      $saveButton.addClass('alert');
+      $save_button.addClass('alert');
       sibling.removeClass('success');
 
     } else {
-      incrementCounter($hamCount);
+      incrementCounter($ham_count);
       if ($root.attr('tag-type') == 'manual') {
-        decrementCounter($spamCount);
+        decrementCounter($spam_count);
       } else {
-        incrementCounter($classifiedCount);
+        incrementCounter($classified_count);
       }
-      $saveButton.addClass('success');
+      $save_button.addClass('success');
       sibling.removeClass('alert');
     }
 
-    $saveButton.attr('disabled', true);
+    $save_button.attr('disabled', true);
     sibling.removeAttr('disabled');
     $root.attr('tag-type', 'manual');
 
@@ -232,7 +135,82 @@ function saveComment($saveButton, callback) {
   });
 }
 
+function predict() {
+  $.ajax({
+    type: 'GET',
+    url: predict_ajax_url,
+    headers: {'X-CSRFToken': CSRFTOKEN},
+    data: { v: VIDEO_ID, t: tag_bool, next_page_token: NEXT_PAGE_TOKEN },
+    dataType: 'json'
+  }).fail(function(data) {
+    $more_comments.remove();
+    console.log('ERROR! The server did\'t return a correct JSON.');
+    console.log(data.responseText);
+    console.log(data);
+  }).done(function(data) {
+    NEXT_PAGE_TOKEN = data['next_page_token'];
+    var tag = (tag_bool) ? SPAM_TAG : HAM_TAG;
+    for (var key in data['comments']) {
+      var c = data['comments'][key];
+      $('#predicted-comments').append(formattedComment(key, c.author, c.date,
+                                      c.content, tag, 'automatic'));
+    }
+
+    if (NEXT_PAGE_TOKEN == 'None') {
+      $more_comments.remove();
+    } else {
+      unlockLoadingButton($more_comments, 'Show more comments <i class="fi-refresh"></i>');
+      $('#export-modal-button').removeAttr('disabled');
+    }
+  });
+}
+
+var TAG = '<div class="tag-column small-3 columns">' +
+          '<span class="comment_tag right tiny secondary button spam" tag="spam">Spam</span>' +
+          '<span class="comment_tag right tiny secondary button ham" tag="ham">Ham</span>' +
+          '</div>';
+
+var SPAM_TAG = '<div class="tag-column small-3 columns">' +
+          '<span class="comment_tag right tiny secondary button alert spam" disabled tag="spam">Spam</span>' +
+          '<span class="comment_tag right tiny secondary button ham" tag="ham">Ham</span>' +
+          '</div>';
+
+var HAM_TAG = '<div class="tag-column small-3 columns">' +
+          '<span class="comment_tag right tiny secondary button spam" tag="spam">Spam</span>' +
+          '<span class="comment_tag right tiny secondary button success ham" disabled tag="ham">Ham</span>' +
+          '</div>';
+
+var VIDEO_ID;
+var CSRFTOKEN;
+var NEXT_PAGE_TOKEN;
 var $more_comments;
+var $classified_count;
+var $spam_count;
+var $ham_count;
+
 $(function() {
+    /* Initializing some global variables */
+  CSRFTOKEN = $.cookie('csrftoken');
+  VIDEO_ID = $('#video-title').attr('video-id');
+  NEXT_PAGE_TOKEN = 'None'
+
   $more_comments = $('#more-comments');
+  $classified_count = $('.classifiedCount');
+  $spam_count = $('#spamCount');
+  $ham_count = $('#hamCount');
+
+  /* Events listeners */
+  $('.comments-section').on('click', '.comment_tag', function() {
+    saveComment($(this), minRequired);
+    return false;
+  });
+
+  $more_comments.click(function() {
+    lockLoadingButton($more_comments, 'Loading ...');
+    predict();
+    return false;
+  });
+
+  /* Main function first call */
+  predict();
 });

@@ -107,12 +107,15 @@ def spam(request):
             'spam_count': spam_count, 'ham_count': ham_count}
   return render(request, 'app/spam.html', output)
 
-def predictSpam(request):
+def predict(request):
   output = '{'
   if request.is_ajax() and request.method == 'GET':
-    video_id = request.GET.get('v')
-    if not video_id:
-      return redirect('index')
+    try:
+      video_id = request.GET['v']
+      tag = int(request.GET['t'])
+      assert tag == 0 or tag == 1
+    except Exception, e:
+      return HttpResponse(status=400)
 
     next_page_token = request.GET.get('next_page_token', None)
     if next_page_token == 'None':
@@ -120,14 +123,14 @@ def predictSpam(request):
 
     if classification.has_classifier(video_id):
 
-      spam = []
-      while len(spam) < 10:
+      predicted = []
+      while len(predicted) < 10:
         unlabeled_comments, next_page_token = youtube_api.get_comment_threads(
           video_id, next_page_token)
         pred = classification.predict(video_id, unlabeled_comments)
         for idx, each in enumerate(unlabeled_comments):
           each['tag'] = pred[idx]
-        spam.extend([each for each in unlabeled_comments if each['tag'] == 1])
+        predicted.extend([each for each in unlabeled_comments if each['tag'] == tag])
 
       output += '"next_page_token":"{0}","comments":{{'.format(next_page_token)
       json_format = '"{0}":{{"author":{1},"date":"{2}","content":{3}}}'
@@ -136,7 +139,7 @@ def predictSpam(request):
                             json.dumps(each['author']),
                             each['publishedAt'].strftime(DATE_FORMAT),
                             json.dumps(each['content']))
-                          for each in spam])
+                          for each in predicted])
       output += '}'
   output += '}'
   return HttpResponse(output)

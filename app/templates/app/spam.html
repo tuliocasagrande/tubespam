@@ -37,7 +37,6 @@
 
 {% block js %}
   {% load staticfiles %}
-  <script>var saveComment_ajax_url = "{% url 'saveComment' %}"; var predictSpam_ajax_url = "{% url 'predictSpam' %}";</script>
+  <script>var tag_bool = 1; var saveComment_ajax_url = "{% url 'saveComment' %}"; var predict_ajax_url = "{% url 'predict' %}";</script>
   <script src="{% static 'app/js/common.js' %}" type="text/javascript"></script>
-  <script src="{% static 'app/js/spam.js' %}" type="text/javascript"></script>
 {% endblock %}
