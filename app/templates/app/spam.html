@@ -22,13 +22,13 @@
     <!-- End Main Content -->
 
     <!-- Sidebar -->
-    <aside class="large-4 columns">
-      <div id="summary" class="panel">
+    <div class="large-4 columns">
+      <aside id="summary" class="panel sticky">
         {% include "app/_commonSummary.html" %}
-        <a href="{% url 'watch' %}?v={{ v.video_id }}" class="button expand secondary tiny">Back to video</a>
-        <a href="#" data-reveal-id="training-set-modal" class="button expand tiny">See the training set</a>
-      </div>
-    </aside>
+        <a href="{% url 'watch' %}?v={{ v.video_id }}" class="button secondary tiny">Back to video</a>
+        <a href="#" data-reveal-id="training-set-modal" class="button tiny">See the training set</a>
+      </aside>
+    </div>
     <!-- End Sidebar -->
 
     {% include "app/_trainingSetModal.html" %}

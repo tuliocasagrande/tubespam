@@ -9,10 +9,22 @@
 }
 
 @media only screen and (min-width: 64.063em) { /* min-width 1025px, large screens */
-  #summary {
+  .sticky {
     width: 300px; /* almost equivalent to 4 columns */
     position: fixed;
   }
+}
+
+.footer {
+  padding-top:40px;
+  padding-bottom:40px;
+  margin-top:40px;
+  color:#767676;
+  text-align:center;
+  border-top:1px solid #e5e5e5
+}
+.footer p {
+  margin-bottom: 10px;
 }
 
 #video-details {
