@@ -30,7 +30,7 @@ def index(request):
 def about(request):
   return render(request, 'app/about.html')
 
-def watch(request):
+def video(request):
   video_id = request.GET.get('v')
   if not video_id:
     return redirect('index')
@@ -45,23 +45,24 @@ def watch(request):
 
   output = {'v': video_details, 'comments': comments,
             'spam_count': spam_count, 'ham_count': ham_count}
-  return render(request, 'app/watch.html', output)
+  return render(request, 'app'+request.path_info+'.html', output)
 
 def saveComment(request):
+  if request.method is not 'POST':
+    return HttpResponse(status=400)
+
   try:
     comment_id = request.POST['comment_id']
-    video_id = request.POST['video_id']
+    video_id = request.POST['v']
     author = request.POST['author']
     date = datetime.strptime(request.POST['date'], DATE_FORMAT)
     content = request.POST['content']
-    tag = request.POST['tag']
-  except Exception as e:
-    print 'ERROR!', e
-    return HttpResponse(('ERROR! ', e), status=400)
-
-  if (not comment_id or not video_id or not content or not tag or
-      (tag != 'spam' and tag != 'ham')):
-    return HttpResponse('ERROR! Missing values!', status=400)
+    tag = int(request.POST['tag'])
+    assert comment_id and video_id and author and date and content
+    assert tag == 0 or tag == 1
+    tag = bool(tag)
+  except Exception:
+    return HttpResponse(status=400)
 
   video = retrieveVideo(video_id)
   try:
@@ -69,13 +70,9 @@ def saveComment(request):
   except Comment.DoesNotExist:
     comment = Comment(id=comment_id, author=author, date=date, video=video, content=content)
 
-  if tag == 'spam':
-    comment.tag = True
-  else:
-    comment.tag = False
-
   video.num_untrd_comments += 1
   video.save()
+  comment.tag = tag
   comment.save()
   return HttpResponse(video.num_untrd_comments)
 
@@ -90,31 +87,16 @@ def retrieveVideo(video_id):
   return video
 
 
-def spam(request):
-  video_id = request.GET.get('v')
-  if not video_id:
-    return redirect('index')
-
-  video_details = youtube_api.get_video_by_id(video_id)
-  if not video_details:
-    raise Http404('No Video matches the given query.')
-
-  comments = Comment.objects.filter(video=video_id).order_by('-date')
-  spam_count = comments.filter(tag=True).count()
-  ham_count = len(comments) - spam_count
-
-  output = {'v': video_details, 'comments': comments,
-            'spam_count': spam_count, 'ham_count': ham_count}
-  return render(request, 'app/spam.html', output)
-
 def predict(request):
   output = '{'
   if request.is_ajax() and request.method == 'GET':
     try:
       video_id = request.GET['v']
-      tag = int(request.GET['t'])
+      tag = int(request.GET['tag'])
+      assert video_id
       assert tag == 0 or tag == 1
-    except Exception, e:
+      tag = int(tag)
+    except Exception:
       return HttpResponse(status=400)
 
     next_page_token = request.GET.get('next_page_token', None)

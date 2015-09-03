@@ -93,7 +93,7 @@ function saveComment($save_button, callback) {
     url: saveComment_ajax_url,
     headers: {'X-CSRFToken': CSRFTOKEN},
     data: {comment_id: comment_id,
-        video_id: VIDEO_ID,
+        v: VIDEO_ID,
         author: author,
         date: date,
         content: content,
@@ -105,7 +105,7 @@ function saveComment($save_button, callback) {
   }).done(function(num_untrd_comments) {
     var sibling = $save_button.siblings();
 
-    if (tag == 'spam') {
+    if (tag == '1') {
       incrementCounter($spam_count);
       if ($root.attr('tag-type') == 'manual') {
         decrementCounter($ham_count);
@@ -140,7 +140,7 @@ function predict() {
     type: 'GET',
     url: predict_ajax_url,
     headers: {'X-CSRFToken': CSRFTOKEN},
-    data: { v: VIDEO_ID, t: tag_bool, next_page_token: NEXT_PAGE_TOKEN },
+    data: { v: VIDEO_ID, tag: tag_bool, next_page_token: NEXT_PAGE_TOKEN },
     dataType: 'json'
   }).fail(function(data) {
     $more_comments.remove();
@@ -166,18 +166,18 @@ function predict() {
 }
 
 var TAG = '<div class="tag-column small-3 columns">' +
-          '<span class="comment_tag right tiny secondary button spam" tag="spam">Spam</span>' +
-          '<span class="comment_tag right tiny secondary button ham" tag="ham">Ham</span>' +
+          '<span class="comment_tag right tiny secondary button spam" tag="1">Spam</span>' +
+          '<span class="comment_tag right tiny secondary button ham" tag="0">Ham</span>' +
           '</div>';
 
 var SPAM_TAG = '<div class="tag-column small-3 columns">' +
-          '<span class="comment_tag right tiny secondary button alert spam" disabled tag="spam">Spam</span>' +
-          '<span class="comment_tag right tiny secondary button ham" tag="ham">Ham</span>' +
+          '<span class="comment_tag right tiny secondary button alert spam" disabled tag="1">Spam</span>' +
+          '<span class="comment_tag right tiny secondary button ham" tag="0">Ham</span>' +
           '</div>';
 
 var HAM_TAG = '<div class="tag-column small-3 columns">' +
-          '<span class="comment_tag right tiny secondary button spam" tag="spam">Spam</span>' +
-          '<span class="comment_tag right tiny secondary button success ham" disabled tag="ham">Ham</span>' +
+          '<span class="comment_tag right tiny secondary button spam" tag="1">Spam</span>' +
+          '<span class="comment_tag right tiny secondary button success ham" disabled tag="0">Ham</span>' +
           '</div>';
 
 var VIDEO_ID;

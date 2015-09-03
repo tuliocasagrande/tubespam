@@ -7,8 +7,8 @@ urlpatterns = patterns('',
   url(r'^about$', views.about, name='about'),
 
   # ex: /watch?v=12345678901
-  url(r'^watch$', views.watch, name='watch'),
-  url(r'^spam$', views.spam, name='spam'),
+  url(r'^watch$', views.video, name='watch'),
+  url(r'^spam$', views.video, name='spam'),
   url(r'^predict$', views.predict, name='predict'),
 
   url(r'^saveComment$', views.saveComment, name='saveComment'),
