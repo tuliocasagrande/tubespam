@@ -12,6 +12,5 @@ urlpatterns = patterns('',
   url(r'^predict$', views.predict, name='predict'),
 
   url(r'^saveComment$', views.saveComment, name='saveComment'),
-  url(r'^train$', views.train, name='train'),
   url(r'^export$', views.export, name='export'),
 )
