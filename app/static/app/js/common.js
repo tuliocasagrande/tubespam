@@ -90,10 +90,11 @@ function saveComment($save_button, callback) {
 
   $.ajax({
     type: 'POST',
-    url: saveComment_ajax_url,
+    url: SAVECOMMENT_AJAX_URL,
     headers: {'X-CSRFToken': CSRFTOKEN},
     data: {comment_id: comment_id,
         v: VIDEO_ID,
+        category_id: CATEGORY_ID,
         author: author,
         date: date,
         content: content,
@@ -138,9 +139,12 @@ function saveComment($save_button, callback) {
 function predict() {
   $.ajax({
     type: 'GET',
-    url: predict_ajax_url,
+    url: PREDICT_AJAX_URL,
     headers: {'X-CSRFToken': CSRFTOKEN},
-    data: { v: VIDEO_ID, tag: tag_bool, next_page_token: NEXT_PAGE_TOKEN },
+    data: { v: VIDEO_ID,
+            category_id: CATEGORY_ID,
+            tag: TAG_BOOL,
+            next_page_token: NEXT_PAGE_TOKEN },
     dataType: 'json'
   }).fail(function(data) {
     $more_comments.remove();
@@ -149,7 +153,7 @@ function predict() {
     console.log(data);
   }).done(function(data) {
     NEXT_PAGE_TOKEN = data['next_page_token'];
-    var tag = (tag_bool) ? SPAM_TAG : HAM_TAG;
+    var tag = (TAG_BOOL) ? SPAM_TAG : HAM_TAG;
     for (var key in data['comments']) {
       var c = data['comments'][key];
       $('#predicted-comments').append(formattedComment(key, c.author, c.date,
@@ -181,6 +185,7 @@ var HAM_TAG = '<div class="tag-column small-3 columns">' +
           '</div>';
 
 var VIDEO_ID;
+var CATEGORY_ID;
 var CSRFTOKEN;
 var NEXT_PAGE_TOKEN;
 var $more_comments;
@@ -192,6 +197,7 @@ $(function() {
     /* Initializing some global variables */
   CSRFTOKEN = $.cookie('csrftoken');
   VIDEO_ID = $('#video-title').attr('video-id');
+  CATEGORY_ID = $('#video-title').attr('category-id');
   NEXT_PAGE_TOKEN = 'None'
 
   $more_comments = $('#more-comments');

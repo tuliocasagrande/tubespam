@@ -1,14 +1,18 @@
 from django.db import models
 
-class Video(models.Model):
+class Classifier(models.Model):
   id = models.CharField(primary_key=True, max_length=16)
-  num_untrd_comments = models.IntegerField(default=0)
-  cost = models.DecimalField(max_digits=10, decimal_places=5, null=True, blank=True)
-  acc = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-  stddev = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+  model_filename = models.CharField(max_length=20, null=True, blank=True)
 
   def __unicode__(self):
-    return unicode(self.id) or u''
+    return unicode(self.id)
+
+class Video(models.Model):
+  id = models.CharField(primary_key=True, max_length=16)
+  category_id = models.IntegerField()
+
+  def __unicode__(self):
+    return unicode(self.id)
 
 class Comment(models.Model):
   id = models.CharField(primary_key=True, max_length=64)
@@ -19,7 +23,7 @@ class Comment(models.Model):
   tag = models.BooleanField(default=False)
 
   def __unicode__(self):
-    return self.id
+    return unicode(self.id)
 
   def getTag(self):
     return str(int(self.tag))
