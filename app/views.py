@@ -37,7 +37,7 @@ def video(request):
 
   video_details = youtube_api.get_video_by_id(video_id)
   if not video_details:
-    raise Http404('No Video matches the given query.')
+    raise Http404('This video does not exist.')
 
   comments = Comment.objects.filter(video=video_id).order_by('-date')
   spam_count = comments.filter(tag=True).count()
@@ -47,7 +47,7 @@ def video(request):
             'spam_count': spam_count, 'ham_count': ham_count}
   return render(request, 'app'+request.path_info+'.html', output)
 
-def saveComment(request):
+def save_comment(request):
   if request.method != 'POST':
     return HttpResponse(status=400)
 
@@ -75,10 +75,9 @@ def saveComment(request):
   video.category_id = category_id
   video.save()
 
-  ### TODO
-  # Classifier(video_id).partial_fit(comment)
-  # Classifier(category_id).partial_fit(comment)
-  ###
+  _get_and_fit_classifier(video_id, [comment])
+  _get_and_fit_classifier(category_id, [comment])
+
   return HttpResponse()
 
 def predict(request):
@@ -96,7 +95,7 @@ def predict(request):
   if next_page_token == 'None':
     next_page_token = None
 
-  classifier = _retrieveClassifier(video_id, category_id)
+  classifier = _choose_classifier(video_id, category_id)
 
   predicted = []
   while len(predicted) < 10:
@@ -118,18 +117,14 @@ def predict(request):
   output += '}}'
   return HttpResponse(output)
 
-def _retrieveClassifier(video_id, category_id):
+def _choose_classifier(video_id, category_id):
 
   # Most specialized classifier, only for this video
-  query_set = Classifier.objects.filter(id=video_id)
-  if query_set and classification.load_model(query_set[0]): return query_set[0]
-  classifier = _trainClassifier(video_id, {'video': video_id})
+  classifier = _get_or_create_classifier(video_id, {'video': video_id})
   if classifier: return classifier
 
   # Classifier for the entire category
-  query_set = Classifier.objects.filter(id=category_id)
-  if query_set and classification.load_model(query_set[0]): return query_set[0]
-  classifier = _trainClassifier(category_id, {'video__category_id': category_id})
+  classifier = _get_or_create_classifier(category_id, {'video__category_id': category_id})
   if classifier: return classifier
 
   # Most general classifier
@@ -138,9 +133,19 @@ def _retrieveClassifier(video_id, category_id):
 
   return None
 
-def _trainClassifier(classifier_id, lookup_fields):
-  min_required = 10
+def _get_and_fit_classifier(classifier_id, comments):
+  try:
+    classifier = Classifier.objects.get(id=classifier_id)
+    classification.partial_fit(classifier, comments, new_fit=False)
+  except Exception:
+    pass
 
+def _get_or_create_classifier(classifier_id, lookup_fields):
+  query_set = Classifier.objects.filter(id=classifier_id)
+  if query_set and classification.load_model(query_set[0]):
+    return query_set[0]
+
+  min_required = 10
   comments = Comment.objects.filter(**lookup_fields).order_by('-date')
   spam_count = comments.filter(tag=True).count()
   ham_count = len(comments) - spam_count

@@ -10,7 +10,7 @@ def _vectorize(X):
   return HashingVectorizer(n_features=2 ** 18).transform(X)
 
 def load_model(classifier):
-  """ Return true if the Classifier() has a stored model
+  """ Return true if the classifier has a model saved to disk
   """
   try:
     model_path = os.path.join(CLASSIFICATION_FILES_DIR, classifier.model_filename)

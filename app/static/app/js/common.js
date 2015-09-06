@@ -58,26 +58,7 @@ function unlockLoadingButton($button, text_change) {
   $button.prop('disabled', false);
 }
 
-
-function appendToHtml(list, count) {
-  var new_comment;
-  var len = list.length < count ? list.length : count;
-
-  for (var i = 0; i < len; i++) {
-    new_comment = list.shift();
-    $('#comments').append(formattedComment(
-      new_comment.comment_id, new_comment.author, new_comment.date,
-      new_comment.content, TAG, 'unclassified'));
-  }
-}
-
-function minRequired() {
-  if (parseInt($spam_count.attr('value')) >= 10 && parseInt($ham_count.attr('value')) >= 10) {
-    // ALLOW CLASSIFIER FITTING
-  }
-}
-
-function saveComment($save_button, callback) {
+function saveComment($save_button) {
   if ($save_button.attr('disabled')) return;
 
   var $root = $save_button.parent().parent();
@@ -103,7 +84,7 @@ function saveComment($save_button, callback) {
   }).fail(function(data) {
     console.log(data.responseText);
 
-  }).done(function(num_untrd_comments) {
+  }).done(function() {
     var sibling = $save_button.siblings();
 
     if (tag == '1') {
@@ -130,9 +111,6 @@ function saveComment($save_button, callback) {
     $save_button.attr('disabled', true);
     sibling.removeAttr('disabled');
     $root.attr('tag-type', 'manual');
-
-    console.log(num_untrd_comments);
-    callback(num_untrd_comments);
   });
 }
 
@@ -194,7 +172,7 @@ var $spam_count;
 var $ham_count;
 
 $(function() {
-    /* Initializing some global variables */
+  /* Initializing some global variables */
   CSRFTOKEN = $.cookie('csrftoken');
   VIDEO_ID = $('#video-title').attr('video-id');
   CATEGORY_ID = $('#video-title').attr('category-id');
@@ -207,7 +185,7 @@ $(function() {
 
   /* Events listeners */
   $('.comments-section').on('click', '.comment_tag', function() {
-    saveComment($(this), minRequired);
+    saveComment($(this));
     return false;
   });
 

@@ -11,6 +11,6 @@ urlpatterns = patterns('',
   url(r'^spam$', views.video, name='spam'),
   url(r'^predict$', views.predict, name='predict'),
 
-  url(r'^saveComment$', views.saveComment, name='saveComment'),
+  url(r'^saveComment$', views.save_comment, name='saveComment'),
   url(r'^export$', views.export, name='export'),
 )
