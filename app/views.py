@@ -4,7 +4,7 @@ from django.http import HttpResponse, Http404
 from django.db.models import Count
 import json
 
-from app.models import Video, Comment
+from app.models import Classifier, Comment, Video
 import app.classification as classification
 import app.youtube_api as youtube_api
 
@@ -30,14 +30,14 @@ def index(request):
 def about(request):
   return render(request, 'app/about.html')
 
-def watch(request):
+def video(request):
   video_id = request.GET.get('v')
   if not video_id:
     return redirect('index')
 
   video_details = youtube_api.get_video_by_id(video_id)
   if not video_details:
-    raise Http404('No Video matches the given query.')
+    raise Http404('This video does not exist.')
 
   comments = Comment.objects.filter(video=video_id).order_by('-date')
   spam_count = comments.filter(tag=True).count()
@@ -45,189 +45,118 @@ def watch(request):
 
   output = {'v': video_details, 'comments': comments,
             'spam_count': spam_count, 'ham_count': ham_count}
-  return render(request, 'app/watch.html', output)
+  return render(request, 'app'+request.path_info+'.html', output)
 
-def saveComment(request):
+def save_comment(request):
+  if request.method != 'POST':
+    return HttpResponse(status=400)
+
   try:
     comment_id = request.POST['comment_id']
-    video_id = request.POST['video_id']
+    video_id = request.POST['v']
+    category_id = request.POST['category_id']
     author = request.POST['author']
     date = datetime.strptime(request.POST['date'], DATE_FORMAT)
     content = request.POST['content']
-    tag = request.POST['tag']
-  except Exception as e:
-    print 'ERROR!', e
-    return HttpResponse(('ERROR! ', e), status=400)
+    tag = int(request.POST['tag'])
+    assert comment_id and video_id and category_id and author and date and content
+    assert tag == 0 or tag == 1
+    tag = bool(tag)
+  except Exception:
+    return HttpResponse(status=400)
 
-  if (not comment_id or not video_id or not content or not tag or
-      (tag != 'spam' and tag != 'ham')):
-    return HttpResponse('ERROR! Missing values!', status=400)
+  video, created = Video.objects.get_or_create(id=video_id, defaults=
+              {'category_id':category_id})
+  comment, created = Comment.objects.get_or_create(id=comment_id, defaults=
+              {'author':author, 'date':date, 'video':video, 'content':content})
 
-  video = retrieveVideo(video_id)
-  try:
-    comment = Comment.objects.get(id=comment_id)
-  except Comment.DoesNotExist:
-    comment = Comment(id=comment_id, author=author, date=date, video=video, content=content)
-
-  if tag == 'spam':
-    comment.tag = True
-  else:
-    comment.tag = False
-
-  video.num_untrd_comments += 1
-  video.save()
+  comment.tag = tag
   comment.save()
-  return HttpResponse(video.num_untrd_comments)
+  video.category_id = category_id
+  video.save()
 
+  _get_and_fit_classifier(video_id, [comment])
+  _get_and_fit_classifier(category_id, [comment])
 
-def retrieveVideo(video_id):
+  return HttpResponse()
+
+def predict(request):
   try:
-    video = Video.objects.get(id=video_id)
-  except Video.DoesNotExist:
-    video = Video(id=video_id)
-    video.save()
+    video_id = request.GET['v']
+    category_id = request.GET['category_id']
+    tag = int(request.GET['tag'])
+    assert video_id
+    assert tag == 0 or tag == 1
+    tag = int(tag)
+  except Exception:
+    return HttpResponse(status=400)
 
-  return video
+  next_page_token = request.GET.get('next_page_token', None)
+  if next_page_token == 'None':
+    next_page_token = None
 
+  classifier = _choose_classifier(video_id, category_id)
 
-def spam(request):
-  video_id = request.GET.get('v')
-  if not video_id:
-    return redirect('index')
+  predicted = []
+  while len(predicted) < 10:
+    unlabeled_comments, next_page_token = youtube_api.get_comment_threads(
+      video_id, next_page_token)
+    pred = classification.predict(classifier, unlabeled_comments)
+    for idx, each in enumerate(unlabeled_comments):
+      each['tag'] = pred[idx]
+    predicted.extend([each for each in unlabeled_comments if each['tag'] == tag])
 
-  video_details = youtube_api.get_video_by_id(video_id)
-  if not video_details:
-    raise Http404('No Video matches the given query.')
+  output = '{{"next_page_token":"{0}","comments":{{'.format(next_page_token)
+  json_format = '"{0}":{{"author":{1},"date":"{2}","content":{3}}}'
+  output += ','.join([json_format.format(
+                        each['comment_id'],
+                        json.dumps(each['author']),
+                        each['date'].strftime(DATE_FORMAT),
+                        json.dumps(each['content']))
+                      for each in predicted])
+  output += '}}'
+  return HttpResponse(output)
 
-  comments = Comment.objects.filter(video=video_id).order_by('-date')
+def _choose_classifier(video_id, category_id):
+
+  # Most specialized classifier, only for this video
+  classifier = _get_or_create_classifier(video_id, {'video': video_id})
+  if classifier: return classifier
+
+  # Classifier for the entire category
+  classifier = _get_or_create_classifier(category_id, {'video__category_id': category_id})
+  if classifier: return classifier
+
+  # Most general classifier
+  query_set = Classifier.objects.get(id=0)
+  if query_set and classification.load_model(query_set[0]): return query_set[0]
+
+  return None
+
+def _get_and_fit_classifier(classifier_id, comments):
+  try:
+    classifier = Classifier.objects.get(id=classifier_id)
+    classification.partial_fit(classifier, comments, new_fit=False)
+  except Exception:
+    pass
+
+def _get_or_create_classifier(classifier_id, lookup_fields):
+  query_set = Classifier.objects.filter(id=classifier_id)
+  if query_set and classification.load_model(query_set[0]):
+    return query_set[0]
+
+  min_required = 10
+  comments = Comment.objects.filter(**lookup_fields).order_by('-date')
   spam_count = comments.filter(tag=True).count()
   ham_count = len(comments) - spam_count
 
-  output = {'v': video_details, 'comments': comments,
-            'spam_count': spam_count, 'ham_count': ham_count}
-  return render(request, 'app/spam.html', output)
+  if spam_count >= min_required and ham_count >= min_required:
+    classifier = Classifier(id=classifier_id, model_filename=classifier_id+'_model')
+    classifier.save()
+    classification.partial_fit(classifier, comments, new_fit=True)
+    return classifier
 
-def predictSpam(request):
-  output = '{'
-  if request.is_ajax():
-    if request.method == 'GET':
-      video_id = request.GET['v']
-      next_page_token = request.GET['next_page_token']
-      if next_page_token == 'None':
-        next_page_token = None
-
-      if classification.has_classifier(video_id):
-
-        spam = []
-        while len(spam) < 10:
-          unlabeled_comments, next_page_token = youtube_api.get_comment_threads(
-            video_id, next_page_token)
-          pred = classification.predict(video_id, unlabeled_comments)
-          for idx, each in enumerate(unlabeled_comments):
-            each['tag'] = pred[idx]
-          spam.extend([each for each in unlabeled_comments if each['tag'] == 1])
-
-        json_format = '"{0}":{{"author":{1},"date":"{2}","content":{3}}}'
-        output += ','.join([json_format.format(
-                              each['comment_id'],
-                              json.dumps(each['author']),
-                              each['publishedAt'].strftime(DATE_FORMAT),
-                              json.dumps(each['content']))
-                            for each in spam])
-
-  output += '}'
-  return HttpResponse(output)
-
-# With the API v2, this method just render the page
-def classify(request):
-  video_id = request.GET.get('v')
-  if not video_id:
-    return redirect('index')
-
-  video = get_object_or_404(Video, pk=video_id)
-
-  video_details = youtube_api.get_video_by_id(video_id)
-  if not video_details:
-    raise Http404('No Video matches the given query.')
-
-  comments = Comment.objects.filter(video=video_id).order_by('-date')
-  spam_count = comments.filter(tag=True).count()
-  ham_count = len(comments) - spam_count
-
-  output = {'v': video_details, 'len_error': False,
-            'spam_count': spam_count, 'ham_count': ham_count,
-            'has_clf': classification.has_classifier(video_id)}
-
-  if spam_count < 10 or ham_count < 10:
-     output['len_error'] = True
-     return render(request, 'app/classify.html', output)
-
-  # Save to use with the API v3 (when available)
-  # elif video.num_untrd_comments < 5 and classification.has_classifier(video_id):
-  #   pred = classification.predict(video_id, test())
-
-  # else:
-  #   video.acc, video.stddev = classification.fit(video_id, comments)
-  #   video.num_untrd_comments = 0
-  #   video.save()
-  #   pred = classification.predict(video_id, test())
-
-
-  output['cost'] = video.cost
-  output['acc'] = video.acc
-  output['stddev'] = video.stddev
-  output['comments'] = comments
-  # output['prediction'] = zip(test(), pred)
-  return render(request, 'app/classify.html', output)
-
-def train(request):
-  output = '{'
-  if request.is_ajax():
-    if request.method == 'POST':
-
-      video_id = request.POST['v']
-      video = Video.objects.get(id=video_id)
-      unlabeled_comments = prepareNewComments(request.POST.getlist('comments[]'))
-      comments = Comment.objects.filter(video=video_id)
-      spam_count = comments.filter(tag=True).count()
-      ham_count = len(comments) - spam_count
-
-      if video_id and unlabeled_comments and spam_count >= 10 and ham_count >= 10:
-        if video.num_untrd_comments < 5 and classification.has_classifier(video_id):
-          pred = classification.predict(video_id, unlabeled_comments)
-
-        else:
-          video.cost, video.acc, video.stddev = classification.fit(video_id, comments)
-          video.num_untrd_comments = 0
-          video.save()
-          pred = classification.predict(video_id, unlabeled_comments)
-
-        json_format = '"{0}":{{"author":"{1}","date":"{2}","content":"{3}","tag":"{4}"}}'
-        output += ','.join([json_format.format(
-                              each.id,
-                              each.toJson('author'),
-                              each.date.strftime(DATE_FORMAT),
-                              each.toJson('content'),
-                              pred[i])
-                            for i, each in enumerate(unlabeled_comments)])
-
-  output += '}'
-  return HttpResponse(output)
-
-def reloadClassifierInfo(request):
-  output = ''
-
-  video_id = request.GET.get('v')
-  if video_id:
-    video = Video.objects.get(id=video_id)
-    if video and classification.has_classifier(video_id):
-      # TODO
-      # RETURN A JSON FOR GOD SAKE
-      output = '<hr/><div class="pulse">' \
-               '<div><strong>Classifier:</strong> SVM Linear (c: {:f})</div>' \
-               '<div><strong>Accuracy:</strong> {:.2f}% &#177; {:.2f}%</div>' \
-               '</div><hr/>'.format(video.cost, video.acc, video.stddev)
-  return HttpResponse(output)
+  return None
 
 def export(request):
   video_id = request.POST.get('v')
@@ -277,15 +206,3 @@ def export(request):
   response = HttpResponse(csv, content_type='text/plain')
   response['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(video_id)
   return response
-
-def prepareNewComments(unlabeled_comments):
-  newComments = []
-
-  for each in unlabeled_comments:
-    j = json.loads(each)
-    c = Comment(id=j['comment_id'], author=j['author'],
-                date=datetime.strptime(j['date'], DATE_FORMAT), content=j['content'])
-
-    newComments.append(c)
-
-  return newComments

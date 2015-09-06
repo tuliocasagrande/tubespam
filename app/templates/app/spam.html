@@ -8,46 +8,35 @@
     <div class="large-8 columns" role="content">
       <article id="video-details">
 
-        <h3 id="video-title" video-id="{{ v.video_id }}">{{ v.title }}</h3>
+        <h3 id="video-title" video-id="{{ v.video_id }}" category-id="{{ v.category_id }}">{{ v.title }}</h3>
         <small>Published on {{ v.publishedAt | pretty_date }}</small>
         <div><small>{{ v.description }}</small></div>
       </article>
 
       {% csrf_token %}
 
-      <div id="new-comments" class="comments-section"></div>
+      <div id="predicted-comments" class="comments-section"></div>
 
       <button id="more-comments" class="expand secondary tiny loading-icon" disabled>Loading ...</button>
     </div>
     <!-- End Main Content -->
 
     <!-- Sidebar -->
-    <aside class="large-4 columns">
-      <div id="summary" class="panel">
-        <h4>Summary</h4>
+    <div class="large-4 columns">
+      <aside id="summary" class="panel sticky">
         {% include "app/_commonSummary.html" %}
-
-        <a href="#" data-reveal-id="training-set-modal" class="button expand tiny">See the training set</a>
-      </div>
-    </aside>
+        <a href="{% url 'watch' %}?v={{ v.video_id }}" class="button secondary tiny">Back to video</a>
+        <a href="#" data-reveal-id="training-set-modal" class="button tiny">See the training set</a>
+      </aside>
+    </div>
     <!-- End Sidebar -->
 
-    <div id="training-set-modal" class="reveal-modal" data-reveal aria-labelledby="modalTitle" aria-hidden="true" role="dialog">
-      <h3 id="modalTitle">Samples used to fit the model</h3>
-      <div id="classified-comments" class="comments-section">
-        {% for c in comments %}
-          {% include "app/_commentRow.html" %}
-          <hr/>
-        {% endfor %}
-      </div>
-      <a class="close-reveal-modal" aria-label="Close">&#215;</a>
-    </div>
+    {% include "app/_trainingSetModal.html" %}
 
 {% endblock %}
 
 {% block js %}
   {% load staticfiles %}
-  <script>var saveComment_ajax_url = "{% url 'saveComment' %}"; var predictSpam_ajax_url = "{% url 'predictSpam' %}";</script>
+  <script>var TAG_BOOL = 1; var SAVECOMMENT_AJAX_URL = "{% url 'saveComment' %}"; var PREDICT_AJAX_URL = "{% url 'predict' %}";</script>
   <script src="{% static 'app/js/common.js' %}" type="text/javascript"></script>
-  <script src="{% static 'app/js/spam.js' %}" type="text/javascript"></script>
 {% endblock %}

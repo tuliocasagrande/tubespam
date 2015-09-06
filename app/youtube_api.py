@@ -25,6 +25,7 @@ def get_video_by_id(video_id):
       video_details['video_id'] = video_id
       video_details['player'] = search_result['player']['embedHtml']
       video_details['title'] = search_result['snippet']['title']
+      video_details['category_id'] = search_result['snippet']['categoryId']
       video_details['description'] = search_result['snippet']['description']
       video_details['channelTitle'] = search_result['snippet']['channelTitle']
       video_details['publishedAt'] = datetime.strptime(
@@ -45,7 +46,7 @@ def get_videos_by_params(params):
 
     search_response = youtube.videos().list(**params).execute()
 
-    video_list_details = []
+    video_details_list = []
     for search_result in search_response.get('items', []):
       video_details = {}
       video_details['video_id'] = search_result['id']
@@ -54,8 +55,8 @@ def get_videos_by_params(params):
       video_details['thumbnail'] =  search_result['snippet']['thumbnails']['medium']['url']
       video_details['viewCount'] =  search_result['statistics']['viewCount']
       video_details['commentCount'] =  search_result['statistics']['commentCount']
-      video_list_details.append(video_details)
-    return video_list_details
+      video_details_list.append(video_details)
+    return video_details_list
 
   except HttpError, e:
     print "An HTTP error %d occurred:\n%s" % (e.resp.status, e.content)
@@ -70,21 +71,22 @@ def get_comment_threads(video_id, next_page_token=None):
       part='id,snippet',
       videoId=video_id,
       maxResults=100,
+      # searchTerms='visit .co http buy check channel site subscrib',
       pageToken=next_page_token
     ).execute()
 
-    comments_list = []
+    comment_list = []
     for search_result in search_response.get('items', []):
       comment = {}
       comment['comment_id'] = search_result['id']
-      top_lvl_comment = search_result["snippet"]["topLevelComment"]
-      comment['author'] = top_lvl_comment["snippet"]["authorDisplayName"]
-      comment['content'] = top_lvl_comment["snippet"]["textDisplay"]
-      comment['publishedAt'] = datetime.strptime(
-        top_lvl_comment['snippet']['publishedAt'], DATE_FORMAT_YT_API)
-      comments_list.append(comment)
+      top_level_comment = search_result["snippet"]["topLevelComment"]
+      comment['author'] = top_level_comment["snippet"]["authorDisplayName"]
+      comment['content'] = top_level_comment["snippet"]["textDisplay"]
+      comment['date'] = datetime.strptime(
+        top_level_comment['snippet']['publishedAt'], DATE_FORMAT_YT_API)
+      comment_list.append(comment)
 
-    return comments_list, search_response['nextPageToken']
+    return comment_list, search_response['nextPageToken']
 
   except HttpError, e:
     print "An HTTP error %d occurred:\n%s" % (e.resp.status, e.content)

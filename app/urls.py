@@ -7,15 +7,10 @@ urlpatterns = patterns('',
   url(r'^about$', views.about, name='about'),
 
   # ex: /watch?v=12345678901
-  url(r'^watch$', views.watch, name='watch'),
-  url(r'^spam$', views.spam, name='spam'),
-  url(r'^predictSpam$', views.predictSpam, name='predictSpam'),
+  url(r'^watch$', views.video, name='watch'),
+  url(r'^spam$', views.video, name='spam'),
+  url(r'^predict$', views.predict, name='predict'),
 
-  # ex: /classify?v=12345678901
-  url(r'^classify$', views.classify, name='classify'),
-
-  url(r'^saveComment$', views.saveComment, name='saveComment'),
-  url(r'^train$', views.train, name='train'),
+  url(r'^saveComment$', views.save_comment, name='saveComment'),
   url(r'^export$', views.export, name='export'),
-  url(r'^reloadClassifierInfo$', views.reloadClassifierInfo, name='reloadClassifierInfo'),
 )
