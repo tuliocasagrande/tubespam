@@ -23,6 +23,9 @@ def partial_fit(classifier, comments, new_fit=False):
   """ Partial fit for online/incremental learning
       comments = QuerySet( [Comment(id, author, date, content, tag)] )
   """
+  if not os.path.exists(CLASSIFICATION_FILES_DIR):
+    os.makedirs(CLASSIFICATION_FILES_DIR)
+
   model_path = os.path.join(CLASSIFICATION_FILES_DIR, classifier.model_filename)
   X = [c.content for c in comments]
   y = [int(c.tag) for c in comments]
