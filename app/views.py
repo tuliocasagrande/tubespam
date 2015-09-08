@@ -128,16 +128,20 @@ def _choose_classifier(video_id, category_id):
   if classifier: return classifier
 
   # Most general classifier
-  query_set = Classifier.objects.get(id=0)
-  if query_set and classification.load_model(query_set[0]): return query_set[0]
-
-  return None
+  try:
+    classifier = Classifier.objects.get(id='default')
+    if classification.load_model(classifier):
+      return classifier
+    raise Classifier.DoesNotExist()
+  except Classifier.DoesNotExist:
+    raise Classifier.DoesNotExist('Missing default classifier')
 
 def _get_and_fit_classifier(classifier_id, comments):
   try:
     classifier = Classifier.objects.get(id=classifier_id)
     classification.partial_fit(classifier, comments, new_fit=False)
-  except Exception:
+  except Classifier.DoesNotExist:
+    # it's ok to ignore partial_fit inside save_comment(request)
     pass
 
 def _get_or_create_classifier(classifier_id, lookup_fields):
@@ -146,7 +150,7 @@ def _get_or_create_classifier(classifier_id, lookup_fields):
     return query_set[0]
 
   min_required = 10
-  comments = Comment.objects.filter(**lookup_fields).order_by('-date')
+  comments = Comment.objects.filter(**lookup_fields)
   spam_count = comments.filter(tag=True).count()
   ham_count = len(comments) - spam_count
 
