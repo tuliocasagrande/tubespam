@@ -1,15 +1,15 @@
 from django.db import models
 
 class Classifier(models.Model):
-  id = models.CharField(primary_key=True, max_length=16)
-  model_filename = models.CharField(max_length=20, null=True, blank=True)
+  id = models.CharField(primary_key=True, max_length=32)
+  model_filename = models.CharField(max_length=48, null=True, blank=True)
 
   def __unicode__(self):
     return unicode(self.id)
 
 class Video(models.Model):
   id = models.CharField(primary_key=True, max_length=16)
-  category_id = models.IntegerField()
+  channel_id = models.CharField(max_length=32)
 
   def __unicode__(self):
     return unicode(self.id)

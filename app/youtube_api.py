@@ -25,7 +25,7 @@ def get_video_by_id(video_id):
       video_details['video_id'] = video_id
       video_details['player'] = search_result['player']['embedHtml']
       video_details['title'] = search_result['snippet']['title']
-      video_details['category_id'] = search_result['snippet']['categoryId']
+      video_details['channel_id'] = search_result['snippet']['channelId']
       video_details['description'] = search_result['snippet']['description']
       video_details['channelTitle'] = search_result['snippet']['channelTitle']
       video_details['publishedAt'] = datetime.strptime(

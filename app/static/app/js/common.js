@@ -75,7 +75,7 @@ function saveComment($save_button) {
     headers: {'X-CSRFToken': CSRFTOKEN},
     data: {comment_id: comment_id,
         v: VIDEO_ID,
-        category_id: CATEGORY_ID,
+        channel_id: CHANNEL_ID,
         author: author,
         date: date,
         content: content,
@@ -120,7 +120,7 @@ function predict() {
     url: PREDICT_AJAX_URL,
     headers: {'X-CSRFToken': CSRFTOKEN},
     data: { v: VIDEO_ID,
-            category_id: CATEGORY_ID,
+            channel_id: CHANNEL_ID,
             tag: TAG_BOOL,
             next_page_token: NEXT_PAGE_TOKEN },
     dataType: 'json'
@@ -163,7 +163,7 @@ var HAM_TAG = '<div class="tag-column small-3 columns">' +
           '</div>';
 
 var VIDEO_ID;
-var CATEGORY_ID;
+var CHANNEL_ID;
 var CSRFTOKEN;
 var NEXT_PAGE_TOKEN;
 var $more_comments;
@@ -175,7 +175,7 @@ $(function() {
   /* Initializing some global variables */
   CSRFTOKEN = $.cookie('csrftoken');
   VIDEO_ID = $('#video-title').attr('video-id');
-  CATEGORY_ID = $('#video-title').attr('category-id');
+  CHANNEL_ID = $('#video-title').attr('channel-id');
   NEXT_PAGE_TOKEN = 'None'
 
   $more_comments = $('#more-comments');

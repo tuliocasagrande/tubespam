@@ -54,36 +54,36 @@ def save_comment(request):
   try:
     comment_id = request.POST['comment_id']
     video_id = request.POST['v']
-    category_id = request.POST['category_id']
+    channel_id = request.POST['channel_id']
     author = request.POST['author']
     date = datetime.strptime(request.POST['date'], DATE_FORMAT)
     content = request.POST['content']
     tag = int(request.POST['tag'])
-    assert comment_id and video_id and category_id and author and date and content
+    assert comment_id and video_id and channel_id and author and date and content
     assert tag == 0 or tag == 1
     tag = bool(tag)
   except Exception:
     return HttpResponse(status=400)
 
   video, created = Video.objects.get_or_create(id=video_id, defaults=
-              {'category_id':category_id})
+              {'channel_id':channel_id})
   comment, created = Comment.objects.get_or_create(id=comment_id, defaults=
               {'author':author, 'date':date, 'video':video, 'content':content})
 
   comment.tag = tag
   comment.save()
-  video.category_id = category_id
+  video.channel_id = channel_id
   video.save()
 
-  _get_and_fit_classifier(video_id, [comment])
-  _get_and_fit_classifier(category_id, [comment])
+  _get_and_fit_classifier(channel_id, [comment])
+  _get_and_fit_classifier('default', [comment])
 
   return HttpResponse()
 
 def predict(request):
   try:
     video_id = request.GET['v']
-    category_id = request.GET['category_id']
+    channel_id = request.GET['channel_id']
     tag = int(request.GET['tag'])
     assert video_id
     assert tag == 0 or tag == 1
@@ -95,7 +95,7 @@ def predict(request):
   if next_page_token == 'None':
     next_page_token = None
 
-  classifier = _choose_classifier(video_id, category_id)
+  classifier = _choose_classifier(channel_id)
 
   predicted = []
   while len(predicted) < 10:
@@ -117,14 +117,10 @@ def predict(request):
   output += '}}'
   return HttpResponse(output)
 
-def _choose_classifier(video_id, category_id):
+def _choose_classifier(channel_id):
 
-  # Most specialized classifier, only for this video
-  classifier = _get_or_create_classifier(video_id, {'video': video_id})
-  if classifier: return classifier
-
-  # Classifier for the entire category
-  classifier = _get_or_create_classifier(category_id, {'video__category_id': category_id})
+  # Classifier for the channel
+  classifier = _get_or_create_classifier(channel_id, {'video__channel_id': channel_id})
   if classifier: return classifier
 
   # Most general classifier
