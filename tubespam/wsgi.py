@@ -7,6 +7,9 @@ For more information on this file, see
 https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/
 """
 
+import newrelic.agent
+newrelic.agent.initialize('newrelic.ini')
+
 import os
 
 from django.core.wsgi import get_wsgi_application
