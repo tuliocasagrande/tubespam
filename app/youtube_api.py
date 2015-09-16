@@ -63,30 +63,26 @@ def get_videos_by_params(params):
 
 # Call the commentThreads.list method to retrieve comments of the given video_id.
 def get_comment_threads(video_id, next_page_token=None):
-  try:
-    youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-      developerKey=DEVELOPER_KEY)
+  youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
+    developerKey=DEVELOPER_KEY)
 
-    search_response = youtube.commentThreads().list(
-      part='id,snippet',
-      videoId=video_id,
-      maxResults=100,
-      # searchTerms='visit .co http buy check channel site subscrib',
-      pageToken=next_page_token
-    ).execute()
+  search_response = youtube.commentThreads().list(
+    part='id,snippet',
+    videoId=video_id,
+    maxResults=100,
+    # searchTerms='visit .co http buy check channel site subscrib',
+    pageToken=next_page_token
+  ).execute()
 
-    comment_list = []
-    for search_result in search_response.get('items', []):
-      comment = {}
-      comment['comment_id'] = search_result['id']
-      top_level_comment = search_result["snippet"]["topLevelComment"]
-      comment['author'] = top_level_comment["snippet"]["authorDisplayName"]
-      comment['content'] = top_level_comment["snippet"]["textDisplay"]
-      comment['date'] = datetime.strptime(
-        top_level_comment['snippet']['publishedAt'], DATE_FORMAT_YT_API)
-      comment_list.append(comment)
+  comment_list = []
+  for search_result in search_response.get('items', []):
+    comment = {}
+    comment['comment_id'] = search_result['id']
+    top_level_comment = search_result["snippet"]["topLevelComment"]
+    comment['author'] = top_level_comment["snippet"]["authorDisplayName"]
+    comment['content'] = top_level_comment["snippet"]["textDisplay"]
+    comment['date'] = datetime.strptime(
+      top_level_comment['snippet']['publishedAt'], DATE_FORMAT_YT_API)
+    comment_list.append(comment)
 
-    return comment_list, search_response['nextPageToken']
-
-  except HttpError, e:
-    print "An HTTP error %d occurred:\n%s" % (e.resp.status, e.content)
+  return comment_list, search_response['nextPageToken']

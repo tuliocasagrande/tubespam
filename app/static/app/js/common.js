@@ -126,9 +126,11 @@ function predict() {
     dataType: 'json'
   }).fail(function(data) {
     $more_comments.remove();
-    console.log('ERROR! The server did\'t return a correct JSON.');
-    console.log(data.responseText);
-    console.log(data);
+    if ($.parseJSON(data.responseText).error.errors[0].reason === 'commentsDisabled') {
+      $('#predicted-comments').append('<div data-alert class="alert-box alert text-center"><strong>This video has disabled comments!!!</strong></div>');
+    } else {
+      console.log(data);
+    }
   }).done(function(data) {
     NEXT_PAGE_TOKEN = data['next_page_token'];
     var tag = (TAG_BOOL) ? SPAM_TAG : HAM_TAG;

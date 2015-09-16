@@ -1,3 +1,4 @@
+from apiclient.errors import HttpError
 from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, Http404
@@ -98,13 +99,16 @@ def predict(request):
   classifier = _choose_classifier(channel_id)
 
   predicted = []
-  while len(predicted) < 10:
-    unlabeled_comments, next_page_token = youtube_api.get_comment_threads(
-      video_id, next_page_token)
-    pred = classification.predict(classifier, unlabeled_comments)
-    for idx, each in enumerate(unlabeled_comments):
-      each['tag'] = pred[idx]
-    predicted.extend([each for each in unlabeled_comments if each['tag'] == tag])
+  try:
+    while len(predicted) < 10:
+      unlabeled_comments, next_page_token = youtube_api.get_comment_threads(
+        video_id, next_page_token)
+      pred = classification.predict(classifier, unlabeled_comments)
+      for idx, each in enumerate(unlabeled_comments):
+        each['tag'] = pred[idx]
+      predicted.extend([each for each in unlabeled_comments if each['tag'] == tag])
+  except HttpError as e:
+    return HttpResponse(e.content, status=e.resp.status)
 
   output = '{{"next_page_token":"{0}","comments":{{'.format(next_page_token)
   json_format = '"{0}":{{"author":{1},"date":"{2}","content":{3}}}'
