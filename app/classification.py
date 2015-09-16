@@ -32,7 +32,7 @@ def partial_fit(classifier, comments, new_fit=False):
   bag_of_words = _vectorize(X)
 
   if new_fit:
-    model = BernoulliNB(binarize=None)
+    model = BernoulliNB(alpha=0.001, binarize=None)
   else:
     model = joblib.load(model_path)
 
