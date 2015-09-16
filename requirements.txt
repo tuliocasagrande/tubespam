@@ -3,10 +3,11 @@ django-toolbelt==0.0.1
 dj-database-url==0.3.0
 dj-static==0.0.6
 google-api-python-client==1.4.1
-gunicorn==19.1.1
+gunicorn==19.3.0
 httplib2==0.9.1
+newrelic==2.54.0.41
 numpy==1.9.2
-oauth2client==1.4.12
+oauth2client==1.5.0
 psycopg2==2.6
 pyasn1==0.1.8
 pyasn1-modules==0.0.7
