@@ -26,13 +26,11 @@
       <aside id="summary" class="panel sticky">
         {% include "app/_commonSummary.html" %}
         <a href="{% url 'spam' %}?v={{ v.video_id }}" class="button tiny">View spam</a>
-        <a href="#" data-reveal-id="training-set-modal" class="button tiny">See the training set</a>
         <a href="#" id="export-modal-button" data-reveal-id="export-modal" class="button tiny" disabled>Export comments <i class="fi-arrow-down"></i></a>
       </aside>
     </div>
     <!-- End Sidebar -->
     {% include "app/_exportModal.html" %}
-    {% include "app/_trainingSetModal.html" %}
 
 {% endblock %}
 

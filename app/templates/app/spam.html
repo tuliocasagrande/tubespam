@@ -26,12 +26,9 @@
       <aside id="summary" class="panel sticky">
         {% include "app/_commonSummary.html" %}
         <a href="{% url 'watch' %}?v={{ v.video_id }}" class="button secondary tiny">Back to video</a>
-        <a href="#" data-reveal-id="training-set-modal" class="button tiny">See the training set</a>
       </aside>
     </div>
     <!-- End Sidebar -->
-
-    {% include "app/_trainingSetModal.html" %}
 
 {% endblock %}
 

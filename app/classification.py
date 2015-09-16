@@ -2,12 +2,12 @@ import numpy as np
 import os
 from sklearn.externals import joblib
 from sklearn.feature_extraction.text import HashingVectorizer
-from sklearn.linear_model import SGDClassifier
+from sklearn.naive_bayes import BernoulliNB
 
 CLASSIFICATION_FILES_DIR = 'tubespam_classification_files'
 
 def _vectorize(X):
-  return HashingVectorizer(n_features=2 ** 18).transform(X)
+  return HashingVectorizer(binary=True, norm=None).transform(X)
 
 def load_model(classifier):
   """ Return true if the classifier has a model saved to disk
@@ -32,7 +32,7 @@ def partial_fit(classifier, comments, new_fit=False):
   bag_of_words = _vectorize(X)
 
   if new_fit:
-    model = SGDClassifier()
+    model = BernoulliNB(binarize=None)
   else:
     model = joblib.load(model_path)
 
