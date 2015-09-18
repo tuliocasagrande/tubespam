@@ -3,7 +3,9 @@ from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, Http404
 from django.db.models import Count
-import json
+from json import dumps
+from StringIO import StringIO
+from unicodecsv import DictWriter
 
 from app.models import Classifier, Comment, Video
 import app.classification as classification
@@ -100,7 +102,7 @@ def predict(request):
 
   predicted = []
   try:
-    while len(predicted) < 10:
+    while len(predicted) < 10 and next_page_token != False:
       unlabeled_comments, next_page_token = youtube_api.get_comment_threads(
         video_id, next_page_token)
       pred = classification.predict(classifier, unlabeled_comments)
@@ -113,10 +115,10 @@ def predict(request):
   output = '{{"next_page_token":"{0}","comments":{{'.format(next_page_token)
   json_format = '"{0}":{{"author":{1},"date":"{2}","content":{3}}}'
   output += ','.join([json_format.format(
-                        each['comment_id'],
-                        json.dumps(each['author']),
+                        each['id'],
+                        dumps(each['author']),
                         each['date'].strftime(DATE_FORMAT),
-                        json.dumps(each['content']))
+                        dumps(each['content']))
                       for each in predicted])
   output += '}}'
   return HttpResponse(output)
@@ -163,49 +165,66 @@ def _get_or_create_classifier(classifier_id, lookup_fields):
   return None
 
 def export(request):
+  # Restricting to a POST method just to appropriate django's csrf protection
+  # Employing captcha would be an excellent improvement
+  if request.method != 'POST':
+    return HttpResponse(status=400)
+
   video_id = request.POST.get('v')
-  if not video_id:
+  channel_id = request.POST.get('channel_id')
+  export_option = request.POST.get('export-option')
+
+  if not video_id or not channel_id:
     return redirect('index')
 
-  exportOption = request.POST.get('export-option')
-  comments = Comment.objects.filter(video=video_id).order_by('date')
+  comments = Comment.objects.filter(video=video_id).order_by('date').values('id','author','date','content','tag')
 
-  csv_format = '{0},"{1}","{2}","{3}",{4}\n'
-  csv = 'COMMENT_ID,AUTHOR,DATE,CONTENT,TAG\n'
-  csv += ''.join([csv_format.format(
-                    each.id,
-                    each.toCsv('author'),
-                    each.date.isoformat(),
-                    each.toCsv('content'),
-                    1 if each.tag else 0)
-                  for each in comments])
+  for c in comments:
+    c['date'] = c['date'].isoformat()
+    c['tag'] = 1 if c['tag'] else 0
+
+  fieldnames = ['id','author','date','content','tag']
+  csvfile = StringIO()
+  writer = DictWriter(csvfile, fieldnames=fieldnames, encoding='utf-8')
+  writer.writerows(comments)
 
   # Export options:
   # m  => manually classified only
   # mu => manually classified and unclassified
-  if exportOption == 'mu':
-
-    exportExtOption = request.POST.get('export-ext-option')
+  if export_option == 'mu':
+    export_ext_option = request.POST.get('export-ext-option')
     export_amount = int(request.POST.get('export-amount'))
-    unlabeled_comments = prepareNewComments(request.POST.getlist('comments'))
-    unlabeled_comments.sort(key=lambda comment: comment.date)
+    if export_amount > 1000: export_amount = 1000;
+    if export_amount < 0: export_amount = 0;
+
+    next_page_token = None
+    unlabeled_comments = []; batch = []
+
+    while len(unlabeled_comments) < export_amount and next_page_token != False:
+      batch, next_page_token = youtube_api.get_comment_threads(
+        video_id, next_page_token)
+      unlabeled_comments.extend(batch)
+
     unlabeled_comments = unlabeled_comments[(export_amount * -1):]
 
-    # Export extended options:
-    # ec => apply the trained classifier
-    # ek => keep comments unclassified
-    if exportExtOption == 'ec':
-      tag = classification.predict(video_id, unlabeled_comments)
-    elif exportExtOption == 'ek':
-      tag = [-1] * len(unlabeled_comments)
+    if unlabeled_comments:
+      # Export extended options:
+      # ec => apply the trained classifier
+      # ek => keep comments unclassified
+      if export_ext_option == 'ec':
+        classifier = _choose_classifier(channel_id)
+        tag = classification.predict(classifier, unlabeled_comments)
+      elif export_ext_option == 'ek':
+        tag = [-1] * len(unlabeled_comments)
 
-    csv += ''.join([csv_format.format(
-                      each.id,
-                      each.toCsv('author'),
-                      each.date.isoformat(),
-                      each.toCsv('content'),
-                      tag[i])
-                    for i, each in enumerate(unlabeled_comments)])
+      for idx, c in enumerate(unlabeled_comments):
+        c['date'] = c['date'].isoformat()
+        c['tag'] = tag[idx]
+
+      writer.writerows(unlabeled_comments)
+
+  csv = 'COMMENT_ID,AUTHOR,DATE,CONTENT,CLASS\n' + csvfile.getvalue()
+  csvfile.close()
 
   response = HttpResponse(csv, content_type='text/plain')
   response['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(video_id)

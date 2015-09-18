@@ -77,7 +77,7 @@ def get_comment_threads(video_id, next_page_token=None):
   comment_list = []
   for search_result in search_response.get('items', []):
     comment = {}
-    comment['comment_id'] = search_result['id']
+    comment['id'] = search_result['id']
     top_level_comment = search_result["snippet"]["topLevelComment"]
     comment['author'] = top_level_comment["snippet"]["authorDisplayName"]
     comment['content'] = top_level_comment["snippet"]["textDisplay"]
@@ -85,4 +85,4 @@ def get_comment_threads(video_id, next_page_token=None):
       top_level_comment['snippet']['publishedAt'], DATE_FORMAT_YT_API)
     comment_list.append(comment)
 
-  return comment_list, search_response['nextPageToken']
+  return comment_list, search_response.get('nextPageToken', False)

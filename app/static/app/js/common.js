@@ -126,9 +126,11 @@ function predict() {
     dataType: 'json'
   }).fail(function(data) {
     $more_comments.remove();
-    if ($.parseJSON(data.responseText).error.errors[0].reason === 'commentsDisabled') {
-      $('#predicted-comments').append('<div data-alert class="alert-box alert text-center"><strong>This video has disabled comments!!!</strong></div>');
-    } else {
+    $('#export-modal-button').remove();
+    try {
+      if ($.parseJSON(data.responseText).error.errors[0].reason === 'commentsDisabled')
+        $('#predicted-comments').append('<div data-alert class="alert-box alert text-center"><strong>This video has disabled comments!!!</strong></div>');
+    } catch (e) {
       console.log(data);
     }
   }).done(function(data) {
@@ -140,11 +142,10 @@ function predict() {
                                       c.content, tag, 'automatic'));
     }
 
-    if (NEXT_PAGE_TOKEN == 'None') {
+    if (NEXT_PAGE_TOKEN == 'False') {
       $more_comments.remove();
     } else {
       unlockLoadingButton($more_comments, 'Show more comments <i class="fi-refresh"></i>');
-      $('#export-modal-button').removeAttr('disabled');
     }
   });
 }
@@ -195,6 +196,23 @@ $(function() {
     lockLoadingButton($more_comments, 'Loading ...');
     predict();
     return false;
+  });
+
+  $('input[name=export-option]').change(function() {
+    var exportOption = $('input[name=export-option]:checked', '#export-form').val();
+    if (exportOption === 'm') {
+      $('.ext-options-text').addClass('disabled');
+      $('.ext-options').prop('disabled', true);
+    } else {
+      $('.ext-options-text').removeClass('disabled');
+      $('.ext-options').prop('disabled', false)
+    }
+  });
+  $('#export-form').submit(function() {
+    $('#export-modal').foundation('reveal', 'close');
+    $export_amount = $('#export-amount')
+    if ($export_amount.val() > 1000) $export_amount.val(1000);
+    if ($export_amount.val() < 0) $export_amount.val(0);
   });
 
   /* Main function first call */

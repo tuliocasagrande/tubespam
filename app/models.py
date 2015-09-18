@@ -24,21 +24,3 @@ class Comment(models.Model):
 
   def __unicode__(self):
     return unicode(self.id)
-
-  def getTag(self):
-    return str(int(self.tag))
-
-  def toJson(self, attr):
-    string = getattr(self, attr)
-    string = string.replace('\\', '\\\\')
-    string = string.replace('"', '\\"')
-    string = string.replace('\n', ' ')
-    string = string.replace('\r', ' ')
-    return string.encode('utf-8')
-
-  def toCsv(self, attr):
-    string = getattr(self, attr)
-    string = string.replace('"', '""')
-    string = string.replace('\n', ' ')
-    string = string.replace('\r', ' ')
-    return string.encode('utf-8')

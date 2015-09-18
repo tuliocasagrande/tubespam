@@ -5,6 +5,7 @@
 
   <form id="export-form" action="{% url 'export' %}" method="post">{% csrf_token %}
     <input type="hidden" name="v" value="{{ v.video_id }}">
+    <input type="hidden" name="channel_id" value="{{ v.channel_id }}">
     <div id="export-comments"></div>
 
     <p>1- Choose which comments will be exported:</p>
@@ -14,9 +15,9 @@
           <input type="radio" name="export-option" value="m" id="m-radio" checked>
           Manually labeled only <i class="fi-info" data-tooltip class="has-tip" title="Comments classified by the user."></i>
         </label>
-        <label for="mu-radio" class="disabled">
-          <input type="radio" name="export-option" value="mu" id="mu-radio" disabled>
-          Labeled and unlabeled (coming soon!!!)
+        <label for="mu-radio">
+          <input type="radio" name="export-option" value="mu" id="mu-radio">
+          Labeled and unlabeled
         </label>
       </div>
     </div>
@@ -39,7 +40,7 @@
       <p>3- Choose the amount of unlabeled comments to export:</p>
       <div class="row">
         <div class="large-3 columns">
-          <input type="number" value="1000" name="export-amount" id="export-amount" class="ext-options" disabled />
+          <input type="number" value="500" min="0" max="1000" step="100" name="export-amount" id="export-amount" class="ext-options" disabled />
         </div>
       </div>
     </div>
