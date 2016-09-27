@@ -129,7 +129,7 @@ function predict() {
     $('#export-modal-button').remove();
     try {
       if ($.parseJSON(data.responseText).error.errors[0].reason === 'commentsDisabled')
-        $('#predicted-comments').append('<div data-alert class="alert-box alert text-center"><strong>This video has disabled comments!!!</strong></div>');
+        $('#predicted-comments').append('<div data-alert class="alert-box alert text-center"><strong>Comments are disabled for this video.</strong></div>');
     } catch (e) {
       console.log(data);
     }
