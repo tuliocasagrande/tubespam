@@ -47,8 +47,26 @@ python manage.py migrate
 python manage.py fitdefaultclassifier
 ```
 
+## Testing
+
+1. Activate the virtual environment if you have not done yet:
+```
+source venv/bin/activate
+```
+
+2. Run the tests:
+```
+python manage.py test app
+```
+
 ## Running
 
+1. Activate the virtual environment if you have not done yet:
+```
+source venv/bin/activate
+```
+
+2. Run the application:
 ```
 python manage.py runserver
 ```
